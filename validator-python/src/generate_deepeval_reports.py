@@ -55,7 +55,8 @@ def main():
         validator = CardDemoDeepEvalValidator(
             requirements_file=requirements_file,
             codebase_path=codebase_path,
-            llm_model="gpt-4"  # You can change this to "claude-3-sonnet-20240229" or "gemini-pro"
+            llm_model="gpt-4",  # You can change this to "claude-3-sonnet-20240229" or "gemini-pro"
+            enable_deepeval=True  # Set to False to disable DeepEval and use basic validation only
         )
         
         print("📊 Running DeepEval validation...")

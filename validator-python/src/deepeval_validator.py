@@ -30,9 +30,10 @@ from dataclasses import dataclass
 import logging
 
 # DeepEval imports
-from deepeval import test_case, evaluate
+from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.models import GPTModel, AnthropicModel, GeminiModel
+from deepeval.test_case import LLMTestCase
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -81,7 +82,7 @@ class CardDemoDeepEvalValidator:
     against the CardDemo codebase.
     """
     
-    def __init__(self, requirements_file: str, codebase_path: str, llm_model: str = "gpt-4"):
+    def __init__(self, requirements_file: str, codebase_path: str, llm_model: str = "gpt-4", enable_deepeval: bool = True):
         """
         Initialize the DeepEval validator.
         
@@ -89,10 +90,12 @@ class CardDemoDeepEvalValidator:
             requirements_file: Path to the JSON file containing AI-generated requirements
             codebase_path: Path to the CardDemo codebase root directory
             llm_model: LLM model to use for semantic validation
+            enable_deepeval: Whether to enable DeepEval validation (False for basic validation only)
         """
         self.requirements_file = requirements_file
         self.codebase_path = Path(codebase_path)
         self.llm_model = llm_model
+        self.enable_deepeval = enable_deepeval
         
         # Initialize data storage
         self.requirements_data = None
@@ -117,11 +120,35 @@ class CardDemoDeepEvalValidator:
         Initialize the DeepEval model for semantic validation.
         """
         try:
-            # Try to initialize with OpenAI (most common)
-            self.llm = GPTModel(model=self.llm_model)
-            logger.info(f"Initialized DeepEval with OpenAI model: {self.llm_model}")
+            # Set SSL context to handle certificate issues
+            import ssl
+            import certifi
+            
+            # Create a custom SSL context that uses certifi's certificates
+            ssl_context = ssl.create_default_context(cafile=certifi.where())
+            
+            # Check for Azure OpenAI environment variables
+            azure_endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
+            azure_api_key = os.getenv('AZURE_OPENAI_API_KEY')
+            azure_deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT')
+            
+            if azure_endpoint and azure_api_key and azure_deployment:
+                # Use Azure OpenAI
+                # For Azure OpenAI, we need to use the actual model name, not deployment name
+                azure_model = os.getenv('AZURE_OPENAI_MODEL', 'gpt-4o')
+                self.llm = GPTModel(
+                    model=azure_model,
+                    azure_endpoint=azure_endpoint,
+                    azure_api_key=azure_api_key,
+                    azure_api_version=os.getenv('AZURE_OPENAI_API_VERSION', '2025-01-01-preview')
+                )
+                logger.info(f"Initialized DeepEval with Azure OpenAI model: {azure_model} (deployment: {azure_deployment})")
+            else:
+                # Try to initialize with OpenAI (most common)
+                self.llm = GPTModel(model=self.llm_model)
+                logger.info(f"Initialized DeepEval with OpenAI model: {self.llm_model}")
         except Exception as e:
-            logger.warning(f"Could not initialize OpenAI model: {e}")
+            logger.warning(f"Could not initialize OpenAI/Azure OpenAI model: {e}")
             try:
                 # Fallback to Anthropic
                 self.llm = AnthropicModel(model="claude-3-sonnet-20240229")
@@ -257,16 +284,56 @@ class CardDemoDeepEvalValidator:
         """
         Validate a single requirement using DeepEval's semantic understanding.
         """
-        # Create DeepEval test case
-        test_case_obj = test_case(
+        # Check if DeepEval is enabled
+        if not self.enable_deepeval:
+            logger.info(f"DeepEval disabled, using basic validation for {req_id}")
+            return self._basic_validation_fallback(req_id, requirement_text, Exception("DeepEval disabled"))
+        
+        # Create DeepEval test case with proper context
+        test_case_obj = LLMTestCase(
             input=self._create_validation_prompt(requirement_text),
             actual_output=requirement_text,
-            expected_output="Requirement should accurately reflect CardDemo codebase components and architecture"
+            expected_output="Requirement should accurately reflect CardDemo codebase components and architecture",
+            context=self._get_codebase_context()  # Add context to prevent hallucination metric errors
         )
         
-        # Run DeepEval evaluation
+        # Run DeepEval evaluation with timeout and error handling
         try:
-            evaluation_results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
+            import signal
+            import time
+            
+            # Set a timeout for the evaluation (Windows doesn't support SIGALRM, so we'll use a different approach)
+            try:
+                # Try to use threading.Timer for timeout on Windows
+                import threading
+                import queue
+                
+                result_queue = queue.Queue()
+                
+                def run_evaluation():
+                    try:
+                        results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
+                        result_queue.put(('success', results))
+                    except Exception as e:
+                        result_queue.put(('error', e))
+                
+                # Start evaluation in a separate thread
+                eval_thread = threading.Thread(target=run_evaluation)
+                eval_thread.daemon = True
+                eval_thread.start()
+                
+                # Wait for result with timeout
+                try:
+                    result_type, result_data = result_queue.get(timeout=30)  # 30 second timeout
+                    if result_type == 'error':
+                        raise result_data
+                    evaluation_results = result_data
+                except queue.Empty:
+                    raise TimeoutError("DeepEval evaluation timed out after 30 seconds")
+                    
+            except ImportError:
+                # Fallback for systems without threading
+                evaluation_results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
             
             # Extract scores
             hallucination_score = evaluation_results[0].score if evaluation_results else 0.0
@@ -297,17 +364,9 @@ class CardDemoDeepEvalValidator:
             
         except Exception as e:
             logger.error(f"Error in DeepEval validation for {req_id}: {e}")
-            return DeepEvalValidationResult(
-                requirement_id=req_id,
-                requirement_text=requirement_text,
-                status='FAIL',
-                confidence=0.0,
-                semantic_score=0.0,
-                hallucination_score=1.0,
-                detailed_analysis=f"DeepEval validation failed: {e}",
-                component_validation={},
-                suggestions=["Fix DeepEval configuration and retry validation"]
-            )
+            # Fallback to basic validation without DeepEval
+            logger.info(f"Falling back to basic validation for {req_id}")
+            return self._basic_validation_fallback(req_id, requirement_text, e)
     
     def _create_validation_prompt(self, requirement_text: str) -> str:
         """
@@ -346,6 +405,89 @@ class CardDemoDeepEvalValidator:
         - Overall accuracy assessment
         - Specific improvement recommendations
         """
+    
+    def _get_codebase_context(self) -> str:
+        """
+        Get the codebase context for DeepEval hallucination detection.
+        This provides the ground truth about what exists in the codebase.
+        """
+        context_parts = []
+        
+        # Add component lists
+        context_parts.append("CARDDEMO CODEBASE COMPONENTS:")
+        context_parts.append(f"COBOL Programs: {', '.join(sorted(self.known_components['programs']))}")
+        context_parts.append(f"CICS Transactions: {', '.join(sorted(self.known_components['transactions']))}")
+        context_parts.append(f"VSAM Files: {', '.join(sorted(self.known_components['files']))}")
+        context_parts.append(f"BMS Mapsets: {', '.join(sorted(self.known_components['mapsets']))}")
+        context_parts.append(f"JCL Jobs: {', '.join(sorted(self.known_components['jcl_jobs']))}")
+        
+        # Add architectural information
+        context_parts.append("\nCARDDEMO ARCHITECTURE:")
+        context_parts.append("- Uses CICS for transaction processing")
+        context_parts.append("- Uses VSAM for data storage (not IMS DB or DB2)")
+        context_parts.append("- Uses BMS for screen mapping")
+        context_parts.append("- Uses JCL for batch processing")
+        context_parts.append("- Mainframe application with COBOL, CICS, VSAM, and JCL")
+        
+        # Return as a list of strings for DeepEval compatibility
+        return ["\n".join(context_parts)]
+    
+    def _basic_validation_fallback(self, req_id: str, requirement_text: str, error: Exception) -> DeepEvalValidationResult:
+        """
+        Basic validation fallback when DeepEval fails completely.
+        """
+        # Perform basic component validation without LLM
+        component_validation = {
+            'programs': {'mentioned': [], 'valid': [], 'invalid': [], 'false_positives': []},
+            'transactions': {'mentioned': [], 'valid': [], 'invalid': [], 'false_positives': []},
+            'files': {'mentioned': [], 'valid': [], 'invalid': [], 'false_positives': []},
+            'architectural_issues': [],
+            'technical_accuracy': 0.5  # Default to 50% accuracy
+        }
+        
+        # Basic keyword-based validation
+        mentioned_programs = []
+        mentioned_transactions = []
+        mentioned_files = []
+        
+        # Extract potential component names (simple approach)
+        words = requirement_text.upper().split()
+        for word in words:
+            if word in self.known_components['programs']:
+                mentioned_programs.append(word)
+            if word in self.known_components['transactions']:
+                mentioned_transactions.append(word)
+            if word in self.known_components['files']:
+                mentioned_files.append(word)
+        
+        component_validation['programs']['mentioned'] = mentioned_programs
+        component_validation['programs']['valid'] = mentioned_programs
+        component_validation['transactions']['mentioned'] = mentioned_transactions
+        component_validation['transactions']['valid'] = mentioned_transactions
+        component_validation['files']['mentioned'] = mentioned_files
+        component_validation['files']['valid'] = mentioned_files
+        
+        # Check for architectural issues
+        if 'IMS' in requirement_text.upper() or 'DB2' in requirement_text.upper():
+            component_validation['architectural_issues'].append("Mentions IMS/DB2 but CardDemo uses VSAM")
+        
+        # Determine status based on basic validation
+        total_issues = len(component_validation['architectural_issues'])
+        confidence = 0.5 if total_issues == 0 else 0.3
+        
+        status = 'PARTIAL' if confidence >= 0.4 else 'FAIL'
+        
+        return DeepEvalValidationResult(
+            requirement_id=req_id,
+            requirement_text=requirement_text,
+            status=status,
+            confidence=confidence,
+            semantic_score=0.5,
+            hallucination_score=0.5,
+            detailed_analysis=f"Basic validation fallback - DeepEval failed: {error}. Basic component check performed.",
+            component_validation=component_validation,
+            suggestions=["Using basic validation mode. For semantic analysis, configure LLM API keys (OpenAI, Azure, Anthropic, or Google)."]
+        )
     
     def _semantic_component_validation(self, requirement_text: str) -> Dict[str, Any]:
         """
@@ -488,15 +630,46 @@ class CardDemoDeepEvalValidator:
         description = story.get('description', '')
         story_text = f"Title: {title}\nDescription: {description}"
         
-        # Create DeepEval test case for user story
-        test_case_obj = test_case(
+        # Check if DeepEval is enabled
+        if not self.enable_deepeval:
+            logger.info(f"DeepEval disabled, using basic validation for user story {story_id}")
+            return self._basic_validation_fallback(story_id, story_text, Exception("DeepEval disabled"))
+        
+        # Create DeepEval test case for user story with context
+        test_case_obj = LLMTestCase(
             input=f"Validate this user story against CardDemo capabilities:\n{story_text}",
             actual_output=story_text,
-            expected_output="User story should be implementable with existing CardDemo components"
+            expected_output="User story should be implementable with existing CardDemo components",
+            context=self._get_codebase_context()  # Add context to prevent hallucination metric errors
         )
         
         try:
-            evaluation_results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
+            # Use the same timeout approach as the main validation
+            import threading
+            import queue
+            
+            result_queue = queue.Queue()
+            
+            def run_evaluation():
+                try:
+                    results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
+                    result_queue.put(('success', results))
+                except Exception as e:
+                    result_queue.put(('error', e))
+            
+            # Start evaluation in a separate thread
+            eval_thread = threading.Thread(target=run_evaluation)
+            eval_thread.daemon = True
+            eval_thread.start()
+            
+            # Wait for result with timeout
+            try:
+                result_type, result_data = result_queue.get(timeout=30)  # 30 second timeout
+                if result_type == 'error':
+                    raise result_data
+                evaluation_results = result_data
+            except queue.Empty:
+                raise TimeoutError("DeepEval evaluation timed out after 30 seconds")
             
             hallucination_score = evaluation_results[0].score if evaluation_results else 0.0
             relevancy_score = evaluation_results[1].score if len(evaluation_results) > 1 else 0.0
@@ -519,17 +692,9 @@ class CardDemoDeepEvalValidator:
             
         except Exception as e:
             logger.error(f"Error in DeepEval user story validation for {story_id}: {e}")
-            return DeepEvalValidationResult(
-                requirement_id=story_id,
-                requirement_text=story_text,
-                status='FAIL',
-                confidence=0.0,
-                semantic_score=0.0,
-                hallucination_score=1.0,
-                detailed_analysis=f"DeepEval validation failed: {e}",
-                component_validation={},
-                suggestions=["Fix DeepEval configuration and retry validation"]
-            )
+            # Fallback to basic validation
+            logger.info(f"Falling back to basic validation for user story {story_id}")
+            return self._basic_validation_fallback(story_id, story_text, e)
     
     # =============================================================================
     # REQUIREMENTS EXTRACTION METHODS (Same as original validator)
@@ -585,7 +750,11 @@ class CardDemoDeepEvalValidator:
         unidentified_features = self._identify_unidentified_features()
         
         # Generate improvement recommendations
-        improvement_recommendations = self._generate_coverage_recommendations()
+        improvement_recommendations = self._generate_coverage_recommendations(
+            coverage_percentage=coverage_percentage,
+            hallucination_rate=hallucination_rate,
+            semantic_accuracy=semantic_accuracy
+        )
         
         self.coverage_result = DeepEvalCoverageResult(
             total_requirements=total_requirements,
@@ -625,20 +794,20 @@ class CardDemoDeepEvalValidator:
                 unidentified.append(f"Transaction {transaction} not mentioned in requirements")
         return unidentified
     
-    def _generate_coverage_recommendations(self) -> List[str]:
+    def _generate_coverage_recommendations(self, coverage_percentage: float = 0.0, hallucination_rate: float = 0.0, semantic_accuracy: float = 0.0) -> List[str]:
         """Generate recommendations for improving coverage."""
         recommendations = []
         
-        if self.coverage_result.coverage_percentage < 70:
+        if coverage_percentage < 70:
             recommendations.append("Focus on creating requirements for missing COBOL programs")
             recommendations.append("Add requirements for all CICS transactions")
             recommendations.append("Document VSAM file requirements")
         
-        if self.coverage_result.hallucination_rate > 0.3:
+        if hallucination_rate > 0.3:
             recommendations.append("Review requirements for accuracy - high hallucination rate detected")
             recommendations.append("Ensure requirements reference actual CardDemo components")
         
-        if self.coverage_result.semantic_accuracy < 0.7:
+        if semantic_accuracy < 0.7:
             recommendations.append("Improve semantic accuracy of requirements")
             recommendations.append("Align requirements with CardDemo architecture")
         

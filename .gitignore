@@ -109,10 +109,8 @@ Thumbs.db
 *.temp
 *.log
 
-# Generated validation reports
-CardDemo_Requirements_Validation_Report.*
-test_validation_report.*
-sample_validation_report.*
+# Reports directory
+reports/
 
 # Test files
 test_*.py
