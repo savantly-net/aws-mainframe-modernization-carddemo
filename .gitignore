@@ -11,6 +11,7 @@ venv/
 env/
 .venv/
 .env/
+.env
 
 # Python cache files
 __pycache__/
@@ -111,6 +112,9 @@ Thumbs.db
 
 # Reports directory
 reports/
+
+# DeepEval cache and telemetry
+.deepeval/
 
 # Test files
 test_*.py
