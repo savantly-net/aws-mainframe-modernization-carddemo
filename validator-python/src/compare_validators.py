@@ -16,7 +16,7 @@ from pathlib import Path
 import logging
 
 # Import both validators
-from requirements_validator import CardDemoRequirementsValidator
+from regex_validator import CardDemoRequirementsValidator
 from deepeval_validator import CardDemoDeepEvalValidator
 
 # Configure logging
