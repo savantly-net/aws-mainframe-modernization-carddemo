@@ -1,0 +1,173 @@
+{
+  "user_story": {
+    "title": "As a user, I want to submit credit card authorization requests, so that transactions can be processed in real-time.",
+    "description": "As a user, I want to submit credit card authorization requests, so that transactions can be processed in real-time.",
+    "feature_name": "Credit Card Authorizations",
+    "business_rules": [
+      "The credit card number must be 16 digits and numeric.",
+      "The transaction amount must be a positive decimal value.",
+      "Authorization requests must include a valid card expiry date in MMYY format.",
+      "Fraud detection rules must be applied to all authorization requests.",
+      "Authorization requests must be processed in real-time using MQ.",
+      "All approved transactions must be stored in the IMS database.",
+      "All declined transactions must include a reason code.",
+      "The system must ensure two-phase commit transactions across IMS DB and DB2.",
+      "Authorization requests must be logged for audit purposes."
+    ],
+    "acceptance_criteria": [],
+    "priority": "",
+    "story_points": "",
+    "technical_requirements": [
+      "1. **Architecture Considerations**: The system must integrate IMS DB, DB2, and MQ for real-time processing of credit card authorization requests. It should ensure transactional consistency using two-phase commit transactions across IMS DB and DB2.\n\n2. **Involved Modules/Classes**: \n   - COPAUA0C: Handles authorization request processing triggered by MQ messages.\n   - COPAUS0C: Displays authorization summary.\n   - COPAUS1C: Displays authorization details.\n   - COPAUS2C: Marks transactions as fraudulent and updates DB2.\n   - CBPAUP0C: Purges expired authorizations.\n\n3. **Relevant Interfaces or Methods**: \n   - MQ queues for request and response: AWS.M2.CARDDEMO.PAUTH.REQUEST and AWS.M2.CARDDEMO.PAUTH.REPLY.\n   - COBOL BMS screens for user interaction: Authorization Request Screen.\n   - CICS transactions: CP00, CPVS, CPVD.\n\n4. **Database Schema Changes**: \n   - AUTHFRDS table in DB2 to store authorization and fraud-related data.\n   - PA_AUTHORIZATION_DETAILS segment in IMS DB for hierarchical storage of authorization details.\n\n5. **Validations**: \n   - Validate credit card number format and length.\n   - Ensure transaction amount is within permissible limits.\n   - Check for expired cards and invalid authorization types.\n   - Detect potential fraud using predefined rules.\n\n6. **Integration Points**: \n   - MQ for asynchronous communication.\n   - IMS DB for hierarchical data storage.\n   - DB2 for relational data storage and fraud analytics.\n\n7. **Error Handling**: \n   - Return error messages for invalid credit card numbers.\n   - Provide reasons for declined transactions.\n   - Flag transactions for review in case of suspected fraud.\n\n8. **Audit Logging**: \n   - Log all transactions in DB2 for audit purposes.\n\n9. **Transactional Consistency**: \n   - Ensure two-phase commit transactions across IMS DB and DB2.\n\n10. **User Interface**: \n    - Provide screens for submitting authorization requests and viewing authorization details."
+    ]
+  },
+  "deepeval_analysis": {
+    "fields_used_by_deepeval": [
+      "title",
+      "description"
+    ],
+    "fields_ignored_by_deepeval": [
+      "feature_name",
+      "business_rules",
+      "acceptance_criteria",
+      "priority",
+      "story_points",
+      "technical_requirements"
+    ],
+    "deepeval_validation_text": "Title: As a user, I want to submit credit card authorization requests, so that transactions can be processed in real-time.\nDescription: As a user, I want to submit credit card authorization requests, so that transactions can be processed in real-time."
+  },
+  "business_rules_analysis": {
+    "rules": [
+      "The credit card number must be 16 digits and numeric.",
+      "The transaction amount must be a positive decimal value.",
+      "Authorization requests must include a valid card expiry date in MMYY format.",
+      "Fraud detection rules must be applied to all authorization requests.",
+      "Authorization requests must be processed in real-time using MQ.",
+      "All approved transactions must be stored in the IMS database.",
+      "All declined transactions must include a reason code.",
+      "The system must ensure two-phase commit transactions across IMS DB and DB2.",
+      "Authorization requests must be logged for audit purposes."
+    ],
+    "count": 9,
+    "categories": {
+      "validation_rules": [
+        "The credit card number must be 16 digits and numeric.",
+        "The transaction amount must be a positive decimal value.",
+        "Fraud detection rules must be applied to all authorization requests.",
+        "Authorization requests must be processed in real-time using MQ.",
+        "All approved transactions must be stored in the IMS database.",
+        "The system must ensure two-phase commit transactions across IMS DB and DB2.",
+        "Authorization requests must be logged for audit purposes."
+      ],
+      "data_rules": [],
+      "process_rules": [
+        "All declined transactions must include a reason code."
+      ],
+      "security_rules": [
+        "Authorization requests must include a valid card expiry date in MMYY format."
+      ],
+      "audit_rules": [],
+      "other": []
+    },
+    "validation_focus": [
+      "The credit card number must be 16 digits and numeric.",
+      "The transaction amount must be a positive decimal value.",
+      "Authorization requests must include a valid card expiry date in MMYY format.",
+      "Fraud detection rules must be applied to all authorization requests.",
+      "Authorization requests must be processed in real-time using MQ.",
+      "All approved transactions must be stored in the IMS database.",
+      "The system must ensure two-phase commit transactions across IMS DB and DB2.",
+      "Authorization requests must be logged for audit purposes."
+    ],
+    "data_requirements": [
+      "All approved transactions must be stored in the IMS database."
+    ]
+  },
+  "acceptance_criteria_analysis": {
+    "criteria": [],
+    "count": 0,
+    "testable_requirements": [],
+    "functional_requirements": []
+  },
+  "feature_analysis": {
+    "feature_name": "Credit Card Authorizations",
+    "feature_category": "Transaction Processing",
+    "related_features": [
+      "As a user, I want to view detailed authorization information, so that I can verify transaction details and statuses.",
+      "As a user, I want to mark suspicious transactions as fraudulent, so that potential fraud can be flagged and reported.",
+      "As a user, I want to navigate through multiple authorizations, so that I can efficiently manage transaction records.",
+      "As a user, I want to purge expired authorizations, so that outdated data is removed from the system.",
+      "As a system, I want to validate authorization requests, so that only legitimate transactions are processed.",
+      "As a system, I want to apply business rules to authorization requests, so that transactions comply with predefined policies.",
+      "As a system, I want to detect and report fraudulent transactions, so that fraud analytics can be performed.",
+      "As a system, I want to store authorization details in IMS DB, so that transaction data is securely maintained.",
+      "As a system, I want to perform batch processing of expired authorizations, so that system resources are optimized."
+    ]
+  },
+  "priority_analysis": {
+    "priority": "",
+    "story_points": "",
+    "business_value": "Not specified",
+    "effort_estimate": "Not specified"
+  },
+  "technical_requirements_analysis": {
+    "requirements": [
+      "1. **Architecture Considerations**: The system must integrate IMS DB, DB2, and MQ for real-time processing of credit card authorization requests. It should ensure transactional consistency using two-phase commit transactions across IMS DB and DB2.\n\n2. **Involved Modules/Classes**: \n   - COPAUA0C: Handles authorization request processing triggered by MQ messages.\n   - COPAUS0C: Displays authorization summary.\n   - COPAUS1C: Displays authorization details.\n   - COPAUS2C: Marks transactions as fraudulent and updates DB2.\n   - CBPAUP0C: Purges expired authorizations.\n\n3. **Relevant Interfaces or Methods**: \n   - MQ queues for request and response: AWS.M2.CARDDEMO.PAUTH.REQUEST and AWS.M2.CARDDEMO.PAUTH.REPLY.\n   - COBOL BMS screens for user interaction: Authorization Request Screen.\n   - CICS transactions: CP00, CPVS, CPVD.\n\n4. **Database Schema Changes**: \n   - AUTHFRDS table in DB2 to store authorization and fraud-related data.\n   - PA_AUTHORIZATION_DETAILS segment in IMS DB for hierarchical storage of authorization details.\n\n5. **Validations**: \n   - Validate credit card number format and length.\n   - Ensure transaction amount is within permissible limits.\n   - Check for expired cards and invalid authorization types.\n   - Detect potential fraud using predefined rules.\n\n6. **Integration Points**: \n   - MQ for asynchronous communication.\n   - IMS DB for hierarchical data storage.\n   - DB2 for relational data storage and fraud analytics.\n\n7. **Error Handling**: \n   - Return error messages for invalid credit card numbers.\n   - Provide reasons for declined transactions.\n   - Flag transactions for review in case of suspected fraud.\n\n8. **Audit Logging**: \n   - Log all transactions in DB2 for audit purposes.\n\n9. **Transactional Consistency**: \n   - Ensure two-phase commit transactions across IMS DB and DB2.\n\n10. **User Interface**: \n    - Provide screens for submitting authorization requests and viewing authorization details."
+    ],
+    "count": 1,
+    "parsed_requirements": [
+      "AUTHFRDS table in DB2 to store authorization and fraud-related data.",
+      "PA_AUTHORIZATION_DETAILS segment in IMS DB for hierarchical storage of authorization details.",
+      "Validate credit card number format and length.",
+      "Ensure transaction amount is within permissible limits.",
+      "Check for expired cards and invalid authorization types.",
+      "Detect potential fraud using predefined rules.",
+      "MQ for asynchronous communication.",
+      "IMS DB for hierarchical data storage.",
+      "DB2 for relational data storage and fraud analytics.",
+      "Return error messages for invalid credit card numbers.",
+      "Provide reasons for declined transactions.",
+      "Flag transactions for review in case of suspected fraud.",
+      "Log all transactions in DB2 for audit purposes.",
+      "Ensure two-phase commit transactions across IMS DB and DB2.",
+      "Provide screens for submitting authorization requests and viewing authorization details."
+    ],
+    "parsed_count": 15,
+    "architecture_components": [
+      "IMS DB",
+      "BMS",
+      "DB2",
+      "MQ",
+      "CICS",
+      "COBOL"
+    ],
+    "integration_points": [
+      "DB2 Database",
+      "IMS Database",
+      "BMS Screen Interface",
+      "CICS Transactions",
+      "MQ Message Queues"
+    ],
+    "data_entities": [
+      "AUTHFRDS table (DB2)",
+      "DB2 Tables",
+      "IMS Segments",
+      "PA_AUTHORIZATION_DETAILS segment (IMS)"
+    ],
+    "validation_rules": [
+      "Data length validation",
+      "Credit card number format validation",
+      "Data format validation",
+      "Fraud detection validation"
+    ]
+  },
+  "metadata": {
+    "source_file": "../data/CD-Requirements.json",
+    "extraction_method": "Same logic as deepeval_validator._extract_user_stories()",
+    "total_user_stories_in_file": 402,
+    "technical_requirements_count": 1,
+    "parsed_technical_requirements_count": 15,
+    "business_rules_count": 9,
+    "acceptance_criteria_count": 0
+  }
+}

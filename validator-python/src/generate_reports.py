@@ -23,7 +23,7 @@ Date: 2025
 
 import os      # For file system operations and path handling
 import sys     # For system-specific parameters and exit codes
-from requirements_validator import CardDemoRequirementsValidator  # Main validator class
+from deepeval_validator import CardDemoDeepEvalValidator  # Main validator class
 
 def main():
     """
@@ -67,7 +67,7 @@ def main():
         # VALIDATOR INITIALIZATION - Set up the requirements validator
         # =============================================================================
         print("🔍 Initializing validator...")
-        validator = CardDemoRequirementsValidator(
+        validator = CardDemoDeepEvalValidator(
             requirements_file='../data/CD-Requirements.json',  # AI-generated requirements
             codebase_path='../..'  # CardDemo root directory
         )
@@ -76,7 +76,7 @@ def main():
         # VALIDATION EXECUTION - Run the complete validation process
         # =============================================================================
         print("📊 Running validation...")
-        results = validator.run_validation()
+        results = validator.run_deepeval_validation()
         
         # =============================================================================
         # RESULTS SUMMARY - Display key validation statistics
@@ -104,13 +104,13 @@ def main():
         # Generate Markdown report (primary format with rich formatting)
         print("1. Generating Markdown report...")
         markdown_file = "../reports/CardDemo_Requirements_Validation_Report.md"
-        validator.generate_markdown_report(markdown_file)
+        validator.generate_deepeval_report(markdown_file)
         print(f"   ✅ Markdown report saved: {markdown_file}")
         
         # Generate text report (legacy format for compatibility)
         print("2. Generating text report...")
         text_file = "../reports/CardDemo_Requirements_Validation_Report.txt"
-        validator.generate_report(text_file)
+        validator.generate_deepeval_report(text_file)
         print(f"   ✅ Text report saved: {text_file}")
         
         # =============================================================================

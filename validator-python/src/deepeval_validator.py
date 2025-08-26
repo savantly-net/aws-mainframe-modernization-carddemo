@@ -29,10 +29,39 @@ from typing import Dict, List, Tuple, Set, Any
 from dataclasses import dataclass
 import logging
 
+# Load environment variables from .env file
+def load_env_file(env_file_path: str | None = None) -> None:
+    """Load environment variables from .env file"""
+    if env_file_path is None:
+        # Look for .env file in common locations
+        possible_paths = [
+            Path.cwd().parent.parent / '.env'  # Root directory
+        ]
+        
+        for path in possible_paths:
+            if path.exists():
+                env_file_path = str(path)
+                break
+    
+    if env_file_path and Path(env_file_path).exists():
+        try:
+            with open(env_file_path, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        os.environ[key.strip()] = value.strip()
+            print(f"Loaded environment variables from {env_file_path}")
+        except Exception as e:
+            print(f"Warning: Could not load .env file {env_file_path}: {e}")
+
+# Load environment variables at module import
+load_env_file()
+
 # DeepEval imports
 from deepeval import evaluate
 from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
-from deepeval.models import GPTModel, AnthropicModel, GeminiModel
+from deepeval.models import GPTModel, AnthropicModel, GeminiModel, AzureOpenAIModel
 from deepeval.test_case import LLMTestCase
 
 # Configure logging
@@ -82,7 +111,7 @@ class CardDemoDeepEvalValidator:
     against the CardDemo codebase.
     """
     
-    def __init__(self, requirements_file: str, codebase_path: str, llm_model: str = "gpt-4", enable_deepeval: bool = True):
+    def __init__(self, requirements_file: str, codebase_path: str, llm_model: str = "gpt-4o", enable_deepeval: bool = True):
         """
         Initialize the DeepEval validator.
         
@@ -130,19 +159,22 @@ class CardDemoDeepEvalValidator:
             # Check for Azure OpenAI environment variables
             azure_endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
             azure_api_key = os.getenv('AZURE_OPENAI_API_KEY')
+            azure_api_version = os.getenv('AZURE_OPENAI_API_VERSION', '2025-01-01-preview')
             azure_deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT')
             
             if azure_endpoint and azure_api_key and azure_deployment:
-                # Use Azure OpenAI
+                # Use Azure OpenAI with correct parameter passing
                 # For Azure OpenAI, we need to use the actual model name, not deployment name
                 azure_model = os.getenv('AZURE_OPENAI_MODEL', 'gpt-4o')
-                self.llm = GPTModel(
-                    model=azure_model,
+                self.llm = AzureOpenAIModel(
+                    model_name=azure_model,
+                    deployment_name=azure_deployment,
+                    azure_openai_api_key=azure_api_key,
+                    openai_api_version=azure_api_version,
                     azure_endpoint=azure_endpoint,
-                    azure_api_key=azure_api_key,
-                    azure_api_version=os.getenv('AZURE_OPENAI_API_VERSION', '2025-01-01-preview')
+                    temperature=0
                 )
-                logger.info(f"Initialized DeepEval with Azure OpenAI model: {azure_model} (deployment: {azure_deployment})")
+                logger.info(f"Initialized DeepEval with Azure OpenAI deployment: {azure_deployment}")
             else:
                 # Try to initialize with OpenAI (most common)
                 self.llm = GPTModel(model=self.llm_model)
@@ -268,15 +300,89 @@ class CardDemoDeepEvalValidator:
         
         for i, req in enumerate(tech_reqs):
             req_id = f"TECH_REQ_{i+1:03d}"
-            result = self._validate_single_requirement_with_deepeval(req_id, req)
-            results.append(result)
+            logger.info(f"Validating requirement {req_id}")
+            try:
+                # Add a timeout for each individual validation
+                import threading
+                import queue
+                
+                result_queue = queue.Queue()
+                
+                def validate_with_timeout():
+                    try:
+                        result = self._validate_single_requirement_with_deepeval(req_id, req)
+                        result_queue.put(('success', result))
+                    except Exception as e:
+                        result_queue.put(('error', e))
+                
+                # Start validation in a separate thread
+                validation_thread = threading.Thread(target=validate_with_timeout)
+                validation_thread.daemon = True
+                validation_thread.start()
+                
+                # Wait for result with timeout
+                try:
+                    result_type, result_data = result_queue.get(timeout=60)  # 60 second timeout per requirement
+                    if result_type == 'error':
+                        logger.error(f"Validation failed for {req_id}: {result_data}")
+                        # Use fallback validation
+                        result = self._handle_validation_failure(req_id, req, result_data)
+                    else:
+                        result = result_data
+                except queue.Empty:
+                    logger.warning(f"Validation timed out for {req_id}, using fallback")
+                    result = self._handle_validation_failure(req_id, req, TimeoutError("Validation timed out"))
+                
+                results.append(result)
+                
+            except Exception as e:
+                logger.error(f"Unexpected error validating {req_id}: {e}")
+                result = self._handle_validation_failure(req_id, req, e)
+                results.append(result)
         
         # Extract and validate user stories
         user_stories = self._extract_user_stories()
         for i, story in enumerate(user_stories):
             story_id = f"USER_STORY_{i+1:03d}"
-            result = self._validate_user_story_with_deepeval(story_id, story)
-            results.append(result)
+            logger.info(f"Validating user story {story_id}")
+            try:
+                # Add a timeout for each individual validation
+                import threading
+                import queue
+                
+                result_queue = queue.Queue()
+                
+                def validate_story_with_timeout():
+                    try:
+                        result = self._validate_user_story_with_deepeval(story_id, story)
+                        result_queue.put(('success', result))
+                    except Exception as e:
+                        result_queue.put(('error', e))
+                
+                # Start validation in a separate thread
+                validation_thread = threading.Thread(target=validate_story_with_timeout)
+                validation_thread.daemon = True
+                validation_thread.start()
+                
+                # Wait for result with timeout
+                try:
+                    result_type, result_data = result_queue.get(timeout=60)  # 60 second timeout per story
+                    if result_type == 'error':
+                        logger.error(f"Story validation failed for {story_id}: {result_data}")
+                        # Use fallback validation
+                        result = self._handle_validation_failure(story_id, story, result_data)
+                    else:
+                        result = result_data
+                except queue.Empty:
+                    logger.warning(f"Story validation timed out for {story_id}, using fallback")
+                    result = self._handle_validation_failure(story_id, story, TimeoutError("Validation timed out"))
+                
+                results.append(result)
+                
+            except Exception as e:
+                logger.error(f"Unexpected error validating story {story_id}: {e}")
+                result = self._handle_validation_failure(story_id, story, e)
+                results.append(result)
         
         return results
     
@@ -287,11 +393,14 @@ class CardDemoDeepEvalValidator:
         # Check if DeepEval is enabled
         if not self.enable_deepeval:
             logger.info(f"DeepEval disabled, using basic validation for {req_id}")
-            return self._basic_validation_fallback(req_id, requirement_text, Exception("DeepEval disabled"))
+            return self._handle_validation_failure(req_id, requirement_text, Exception("DeepEval disabled"))
         
+        llmInput=self._create_validation_prompt(requirement_text)
+
+        logger.info(llmInput)
         # Create DeepEval test case with proper context
         test_case_obj = LLMTestCase(
-            input=self._create_validation_prompt(requirement_text),
+            input=llmInput,
             actual_output=requirement_text,
             expected_output="Requirement should accurately reflect CardDemo codebase components and architecture",
             context=self._get_codebase_context()  # Add context to prevent hallucination metric errors
@@ -312,8 +421,8 @@ class CardDemoDeepEvalValidator:
                 
                 def run_evaluation():
                     try:
-                        results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
-                        result_queue.put(('success', results))
+                        evaluation_results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
+                        result_queue.put(('success', evaluation_results))
                     except Exception as e:
                         result_queue.put(('error', e))
                 
@@ -324,20 +433,42 @@ class CardDemoDeepEvalValidator:
                 
                 # Wait for result with timeout
                 try:
-                    result_type, result_data = result_queue.get(timeout=30)  # 30 second timeout
+                    result_type, evaluation_results = result_queue.get(timeout=45)  # Increased timeout to 45 seconds for Azure OpenAI
                     if result_type == 'error':
-                        raise result_data
-                    evaluation_results = result_data
+                        raise evaluation_results
                 except queue.Empty:
-                    raise TimeoutError("DeepEval evaluation timed out after 30 seconds")
+                    logger.warning(f"DeepEval evaluation timed out for {req_id}, using fallback")
+                    raise TimeoutError("DeepEval evaluation timed out after 45 seconds")
                     
             except ImportError:
                 # Fallback for systems without threading
-                evaluation_results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
+                try:
+                    evaluation_results = evaluate([test_case_obj], [HallucinationMetric(), AnswerRelevancyMetric()])
+                except Exception as eval_error:
+                    logger.warning(f"DeepEval evaluation failed for {req_id}: {eval_error}, using fallback")
+                    raise eval_error
             
             # Extract scores
-            hallucination_score = evaluation_results[0].score if evaluation_results else 0.0
-            relevancy_score = evaluation_results[1].score if len(evaluation_results) > 1 else 0.0
+            try:
+                # Handle different possible result structures from DeepEval
+                if hasattr(evaluation_results, '__iter__') and len(evaluation_results) >= 2:
+                    # If it's a list/iterable of results
+                    hallucination_score = evaluation_results[0].score if hasattr(evaluation_results[0], 'score') else 0.0
+                    relevancy_score = evaluation_results[1].score if hasattr(evaluation_results[1], 'score') else 0.0
+                elif hasattr(evaluation_results, 'metrics'):
+                    # If it's a single result with metrics
+                    metrics = evaluation_results.metrics
+                    hallucination_score = metrics.get('hallucination', 0.0) if hasattr(metrics, 'get') else 0.0
+                    relevancy_score = metrics.get('answer_relevancy', 0.0) if hasattr(metrics, 'get') else 0.0
+                else:
+                    # Fallback to default scores
+                    hallucination_score = 0.5
+                    relevancy_score = 0.5
+                    logger.warning(f"Could not extract scores from DeepEval results for {req_id}, using defaults")
+            except Exception as score_error:
+                logger.warning(f"Error extracting scores from DeepEval results for {req_id}: {score_error}, using defaults")
+                hallucination_score = 0.5
+                relevancy_score = 0.5
             
             # Perform semantic component validation
             component_validation = self._semantic_component_validation(requirement_text)
@@ -366,7 +497,7 @@ class CardDemoDeepEvalValidator:
             logger.error(f"Error in DeepEval validation for {req_id}: {e}")
             # Fallback to basic validation without DeepEval
             logger.info(f"Falling back to basic validation for {req_id}")
-            return self._basic_validation_fallback(req_id, requirement_text, e)
+            return self._handle_validation_failure(req_id, requirement_text, e)
     
     def _create_validation_prompt(self, requirement_text: str) -> str:
         """
@@ -432,61 +563,25 @@ class CardDemoDeepEvalValidator:
         # Return as a list of strings for DeepEval compatibility
         return ["\n".join(context_parts)]
     
-    def _basic_validation_fallback(self, req_id: str, requirement_text: str, error: Exception) -> DeepEvalValidationResult:
+    def _handle_validation_failure(self, req_id: str, requirement_text: str, error: Exception) -> DeepEvalValidationResult:
         """
-        Basic validation fallback when DeepEval fails completely.
+        Handle validation failures by returning a clear error result instead of misleading fallback validation.
         """
-        # Perform basic component validation without LLM
-        component_validation = {
-            'programs': {'mentioned': [], 'valid': [], 'invalid': [], 'false_positives': []},
-            'transactions': {'mentioned': [], 'valid': [], 'invalid': [], 'false_positives': []},
-            'files': {'mentioned': [], 'valid': [], 'invalid': [], 'false_positives': []},
-            'architectural_issues': [],
-            'technical_accuracy': 0.5  # Default to 50% accuracy
-        }
-        
-        # Basic keyword-based validation
-        mentioned_programs = []
-        mentioned_transactions = []
-        mentioned_files = []
-        
-        # Extract potential component names (simple approach)
-        words = requirement_text.upper().split()
-        for word in words:
-            if word in self.known_components['programs']:
-                mentioned_programs.append(word)
-            if word in self.known_components['transactions']:
-                mentioned_transactions.append(word)
-            if word in self.known_components['files']:
-                mentioned_files.append(word)
-        
-        component_validation['programs']['mentioned'] = mentioned_programs
-        component_validation['programs']['valid'] = mentioned_programs
-        component_validation['transactions']['mentioned'] = mentioned_transactions
-        component_validation['transactions']['valid'] = mentioned_transactions
-        component_validation['files']['mentioned'] = mentioned_files
-        component_validation['files']['valid'] = mentioned_files
-        
-        # Check for architectural issues
-        if 'IMS' in requirement_text.upper() or 'DB2' in requirement_text.upper():
-            component_validation['architectural_issues'].append("Mentions IMS/DB2 but CardDemo uses VSAM")
-        
-        # Determine status based on basic validation
-        total_issues = len(component_validation['architectural_issues'])
-        confidence = 0.5 if total_issues == 0 else 0.3
-        
-        status = 'PARTIAL' if confidence >= 0.4 else 'FAIL'
-        
         return DeepEvalValidationResult(
             requirement_id=req_id,
             requirement_text=requirement_text,
-            status=status,
-            confidence=confidence,
-            semantic_score=0.5,
-            hallucination_score=0.5,
-            detailed_analysis=f"Basic validation fallback - DeepEval failed: {error}. Basic component check performed.",
-            component_validation=component_validation,
-            suggestions=["Using basic validation mode. For semantic analysis, configure LLM API keys (OpenAI, Azure, Anthropic, or Google)."]
+            status='FAIL',
+            confidence=0.0,
+            semantic_score=0.0,
+            hallucination_score=0.0,
+            detailed_analysis=f"Validation failed: {error}. DeepEval validation could not be completed.",
+            component_validation={},
+            suggestions=[
+                "Check LLM API configuration (OpenAI, Azure, Anthropic, or Google API keys)",
+                "Verify network connectivity",
+                "Ensure DeepEval dependencies are properly installed",
+                "Consider increasing timeout values if validation is timing out"
+            ]
         )
     
     def _semantic_component_validation(self, requirement_text: str) -> Dict[str, Any]:
@@ -633,7 +728,7 @@ class CardDemoDeepEvalValidator:
         # Check if DeepEval is enabled
         if not self.enable_deepeval:
             logger.info(f"DeepEval disabled, using basic validation for user story {story_id}")
-            return self._basic_validation_fallback(story_id, story_text, Exception("DeepEval disabled"))
+            return self._handle_validation_failure(story_id, story_text, Exception("DeepEval disabled"))
         
         # Create DeepEval test case for user story with context
         test_case_obj = LLMTestCase(
@@ -694,7 +789,7 @@ class CardDemoDeepEvalValidator:
             logger.error(f"Error in DeepEval user story validation for {story_id}: {e}")
             # Fallback to basic validation
             logger.info(f"Falling back to basic validation for user story {story_id}")
-            return self._basic_validation_fallback(story_id, story_text, e)
+            return self._handle_validation_failure(story_id, story_text, e)
     
     # =============================================================================
     # REQUIREMENTS EXTRACTION METHODS (Same as original validator)

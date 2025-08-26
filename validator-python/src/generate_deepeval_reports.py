@@ -35,6 +35,18 @@ def main():
     print("CardDemo DeepEval Requirements Validator - Enhanced Report Generator")
     print("=" * 70)
     
+    # Check for command line arguments
+    enable_deepeval = True
+    if len(sys.argv) > 1:
+        if sys.argv[1].lower() in ['--no-deepeval', '--basic', '--disable-deepeval']:
+            enable_deepeval = False
+            print("🔧 Running in basic validation mode (DeepEval disabled)")
+        elif sys.argv[1].lower() in ['--help', '-h']:
+            print("Usage: python generate_deepeval_reports.py [--no-deepeval]")
+            print("  --no-deepeval: Run in basic validation mode without DeepEval")
+            print("  --help: Show this help message")
+            sys.exit(0)
+    
     # Configuration
     requirements_file = "../data/CD-Requirements.json"
     codebase_path = "../.."
@@ -55,13 +67,14 @@ def main():
         validator = CardDemoDeepEvalValidator(
             requirements_file=requirements_file,
             codebase_path=codebase_path,
-            llm_model="gpt-4",  # You can change this to "claude-3-sonnet-20240229" or "gemini-pro"
-            enable_deepeval=True  # Set to False to disable DeepEval and use basic validation only
+            llm_model="gpt-4o",  # You can change this to "claude-3-sonnet-20240229" or "gemini-pro"
+            enable_deepeval=enable_deepeval  # Use command line argument
         )
         
         print("📊 Running DeepEval validation...")
         
         # Run the complete validation process
+        print("   ⏳ This may take a few minutes...")
         results = validator.run_deepeval_validation()
         
         # Display validation summary
