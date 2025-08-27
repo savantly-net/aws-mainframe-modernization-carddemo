@@ -1,0 +1,586 @@
+{
+  "technology_templates": {
+    "mainframe": {
+      "name": "Mainframe (COBOL/CICS/IMS/DB2)",
+      "description": "Traditional mainframe applications using COBOL, JCL, CICS, IMS, and DB2",
+      "file_patterns": {
+        "source_code": {
+          "description": "COBOL source code files",
+          "patterns": ["**/*.cbl", "**/*.CBL", "**/*.cob", "**/*.COB"],
+          "directories": ["**/cbl", "**/cobol"],
+          "analysis_type": "program_analysis"
+        },
+        "job_control": {
+          "description": "JCL job files",
+          "patterns": ["**/*.jcl", "**/*.JCL"],
+          "directories": ["**/jcl", "**/jobs"],
+          "analysis_type": "job_analysis"
+        },
+        "database_schemas": {
+          "description": "Database schema and DDL files",
+          "patterns": ["**/*.ddl", "**/*.DDL", "**/*.dbd", "**/*.DBD"],
+          "directories": ["**/ddl", "**/ims", "**/db2"],
+          "analysis_type": "schema_analysis"
+        },
+        "screen_maps": {
+          "description": "BMS screen map files",
+          "patterns": ["**/*.bms", "**/*.BMS"],
+          "directories": ["**/bms", "**/screens"],
+          "analysis_type": "screen_analysis"
+        },
+        "copybooks": {
+          "description": "COBOL copybook files",
+          "patterns": ["**/*.cpy", "**/*.CPY"],
+          "directories": ["**/cpy", "**/copybooks"],
+          "analysis_type": "data_structure_analysis"
+        },
+        "cics_definitions": {
+          "description": "CICS CSD files",
+          "patterns": ["**/*.csd", "**/*.CSD"],
+          "directories": ["**/csd", "**/cics"],
+          "analysis_type": "cics_analysis"
+        },
+        "data_files": {
+          "description": "Data and initialization files",
+          "patterns": ["**/*.dat", "**/*.DAT", "**/*.INIT"],
+          "directories": ["**/data"],
+          "analysis_type": "data_analysis"
+        }
+      },
+      "regex_patterns": {
+        "cobol_patterns": {
+          "program_name": "PROGRAM-ID\\s+([A-Z0-9]{1,8})",
+          "transaction_id": "EXEC\\s+CICS\\s+[A-Z]+\\s+TRANSID\\s+([A-Z0-9]{4})",
+          "file_reference": "SELECT\\s+([A-Z0-9-]+)\\s+ASSIGN\\s+TO\\s+([A-Z0-9-]+)",
+          "database_reference": "EXEC\\s+SQL\\s+(SELECT|INSERT|UPDATE|DELETE)",
+          "mq_reference": "EXEC\\s+CICS\\s+(GET|PUT)\\s+QUEUE"
+        },
+        "jcl_patterns": {
+          "job_name": "//\\s*([A-Z0-9@#$]{1,8})\\s+JOB",
+          "program_call": "//\\s+STEP\\s+\\d+\\s+EXEC\\s+PGM=([A-Z0-9]{1,8})",
+          "dataset_reference": "//\\s+([A-Z0-9-]+)\\s+DD\\s+DSN=([A-Z0-9.@#$]+)"
+        },
+        "database_patterns": {
+          "table_name": "CREATE\\s+TABLE\\s+([A-Z0-9_]+)",
+          "column_definition": "([A-Z0-9_]+)\\s+(CHAR|VARCHAR|INTEGER|DECIMAL)",
+          "foreign_key": "FOREIGN\\s+KEY\\s*\\(([A-Z0-9_,\\s]+)\\)\\s+REFERENCES"
+        },
+        "cics_patterns": {
+          "transaction_definition": "DEFINE\\s+TRANSACTION\\s+([A-Z0-9]{4})",
+          "program_definition": "DEFINE\\s+PROGRAM\\s+([A-Z0-9]{1,8})",
+          "file_definition": "DEFINE\\s+FILE\\s+([A-Z0-9-]+)"
+        }
+      },
+      "integration_points": {
+        "database_integrations": {
+          "db2": {
+            "patterns": ["**/ddl/**/*.ddl", "**/ddl/**/*.DDL"],
+            "keywords": [
+              "DB2",
+              "SQL",
+              "CREATE TABLE",
+              "INSERT",
+              "SELECT",
+              "UPDATE",
+              "DELETE"
+            ]
+          },
+          "ims": {
+            "patterns": ["**/ims/**/*.dbd", "**/ims/**/*.DBD"],
+            "keywords": ["IMS", "DBD", "SEGM", "FIELD", "DBDGEN"]
+          },
+          "vsam": {
+            "patterns": ["**/*.cbl", "**/*.CBL"],
+            "keywords": ["VSAM", "KSDS", "ESDS", "RRDS", "SELECT", "ASSIGN"]
+          }
+        },
+        "messaging_integrations": {
+          "mq": {
+            "patterns": ["**/*.cbl", "**/*.CBL"],
+            "keywords": ["MQ", "GET", "PUT", "QUEUE", "EXEC CICS"]
+          }
+        },
+        "transaction_integrations": {
+          "cics": {
+            "patterns": ["**/*.cbl", "**/*.CBL", "**/*.csd", "**/*.CSD"],
+            "keywords": ["CICS", "EXEC CICS", "TRANSID", "COMMAREA"]
+          }
+        }
+      }
+    },
+    "java_spring": {
+      "name": "Java Spring Boot",
+      "description": "Java applications using Spring Boot framework",
+      "file_patterns": {
+        "source_code": {
+          "description": "Java source code files",
+          "patterns": ["**/*.java"],
+          "directories": ["**/src/main/java", "**/src", "**/java"],
+          "analysis_type": "program_analysis"
+        },
+        "configuration": {
+          "description": "Spring configuration files",
+          "patterns": ["**/*.properties", "**/*.yml", "**/*.yaml", "**/*.xml"],
+          "directories": ["**/src/main/resources", "**/config", "**/resources"],
+          "analysis_type": "configuration_analysis"
+        },
+        "tests": {
+          "description": "Test files",
+          "patterns": ["**/*Test.java", "**/*Tests.java"],
+          "directories": ["**/src/test/java", "**/test", "**/tests"],
+          "analysis_type": "test_analysis"
+        },
+        "build_files": {
+          "description": "Build configuration files",
+          "patterns": ["**/pom.xml", "**/build.gradle", "**/gradle.properties"],
+          "directories": ["**/"],
+          "analysis_type": "build_analysis"
+        }
+      },
+      "regex_patterns": {
+        "java_patterns": {
+          "class_definition": "(public\\s+)?class\\s+([A-Za-z0-9_]+)",
+          "method_definition": "(public|private|protected)\\s+[A-Za-z0-9_<>\\[\\]\\s]+\\s+([a-z][a-zA-Z0-9_]*)\\s*\\(",
+          "import_statement": "import\\s+([a-zA-Z0-9_.*]+);",
+          "annotation": "@([A-Za-z0-9_]+)",
+          "spring_annotation": "@(Controller|Service|Repository|Component|Autowired|Value|RequestMapping|GetMapping|PostMapping)"
+        },
+        "spring_patterns": {
+          "controller_mapping": "@(RequestMapping|GetMapping|PostMapping|PutMapping|DeleteMapping)\\s*\\(([^)]+)\\)",
+          "dependency_injection": "@(Autowired|Resource|Inject)\\s+([A-Za-z0-9_<>\\[\\]\\s]+)",
+          "configuration_property": "@Value\\s*\\(\"([^\"]+)\"\\)",
+          "bean_definition": "@(Bean|Component|Service|Repository|Controller)"
+        },
+        "database_patterns": {
+          "jpa_entity": "@Entity\\s+class\\s+([A-Za-z0-9_]+)",
+          "jpa_column": "@Column\\s*\\(([^)]*)\\)",
+          "jpa_relationship": "@(OneToMany|ManyToOne|OneToOne|ManyToMany)",
+          "sql_query": "@Query\\s*\\(\"([^\"]+)\"\\)"
+        }
+      },
+      "integration_points": {
+        "database_integrations": {
+          "jpa": {
+            "patterns": ["**/*.java"],
+            "keywords": [
+              "@Entity",
+              "@Repository",
+              "JpaRepository",
+              "CrudRepository",
+              "EntityManager"
+            ]
+          },
+          "jdbc": {
+            "patterns": ["**/*.java"],
+            "keywords": [
+              "JdbcTemplate",
+              "DataSource",
+              "Connection",
+              "PreparedStatement"
+            ]
+          }
+        },
+        "web_integrations": {
+          "rest_api": {
+            "patterns": ["**/*.java"],
+            "keywords": [
+              "@RestController",
+              "@RequestMapping",
+              "@GetMapping",
+              "@PostMapping",
+              "ResponseEntity"
+            ]
+          },
+          "web_mvc": {
+            "patterns": ["**/*.java"],
+            "keywords": [
+              "@Controller",
+              "@RequestMapping",
+              "ModelAndView",
+              "ViewResolver"
+            ]
+          }
+        },
+        "messaging_integrations": {
+          "jms": {
+            "patterns": ["**/*.java"],
+            "keywords": [
+              "@JmsListener",
+              "JmsTemplate",
+              "MessageListener",
+              "Queue",
+              "Topic"
+            ]
+          },
+          "kafka": {
+            "patterns": ["**/*.java"],
+            "keywords": [
+              "@KafkaListener",
+              "KafkaTemplate",
+              "Consumer",
+              "Producer"
+            ]
+          }
+        }
+      }
+    },
+    "python_django": {
+      "name": "Python Django",
+      "description": "Python applications using Django framework",
+      "file_patterns": {
+        "source_code": {
+          "description": "Python source code files",
+          "patterns": ["**/*.py"],
+          "directories": ["**/", "**/src", "**/app"],
+          "analysis_type": "program_analysis"
+        },
+        "django_apps": {
+          "description": "Django application directories",
+          "patterns": [
+            "**/apps.py",
+            "**/models.py",
+            "**/views.py",
+            "**/urls.py"
+          ],
+          "directories": ["**/"],
+          "analysis_type": "django_analysis"
+        },
+        "templates": {
+          "description": "Django template files",
+          "patterns": ["**/*.html"],
+          "directories": ["**/templates", "**/templatetags"],
+          "analysis_type": "template_analysis"
+        },
+        "static_files": {
+          "description": "Static files (CSS, JS, images)",
+          "patterns": [
+            "**/*.css",
+            "**/*.js",
+            "**/*.png",
+            "**/*.jpg",
+            "**/*.svg"
+          ],
+          "directories": ["**/static", "**/media"],
+          "analysis_type": "static_analysis"
+        },
+        "configuration": {
+          "description": "Django configuration files",
+          "patterns": [
+            "**/settings.py",
+            "**/urls.py",
+            "**/wsgi.py",
+            "**/manage.py"
+          ],
+          "directories": ["**/"],
+          "analysis_type": "configuration_analysis"
+        }
+      },
+      "regex_patterns": {
+        "python_patterns": {
+          "class_definition": "class\\s+([A-Za-z0-9_]+)",
+          "function_definition": "def\\s+([a-z_][a-zA-Z0-9_]*)\\s*\\(",
+          "import_statement": "(import|from)\\s+([a-zA-Z0-9_.]+)",
+          "decorator": "@([a-zA-Z0-9_.]+)"
+        },
+        "django_patterns": {
+          "model_definition": "class\\s+([A-Za-z0-9_]+)\\s*\\(models\\.Model\\)",
+          "field_definition": "([a-z_][a-zA-Z0-9_]*)\\s*=\\s*models\\.([A-Za-z0-9_]+)",
+          "view_definition": "def\\s+([a-z_][a-zA-Z0-9_]*)\\s*\\(request",
+          "url_pattern": "path\\s*\\(\\s*['\"]([^'\"]+)['\"]",
+          "form_definition": "class\\s+([A-Za-z0-9_]+)\\s*\\(forms\\.ModelForm\\)"
+        },
+        "database_patterns": {
+          "migration_file": "class\\s+([A-Za-z0-9_]+)\\s*\\(migrations\\.Migration\\)",
+          "field_type": "models\\.(CharField|TextField|IntegerField|DateTimeField|ForeignKey|ManyToManyField)",
+          "database_operation": "migrations\\.(CreateModel|AddField|AlterField|DeleteModel)"
+        }
+      },
+      "integration_points": {
+        "database_integrations": {
+          "django_orm": {
+            "patterns": ["**/*.py"],
+            "keywords": [
+              "models.Model",
+              "QuerySet",
+              "objects.all()",
+              "objects.filter()",
+              "objects.create()"
+            ]
+          },
+          "raw_sql": {
+            "patterns": ["**/*.py"],
+            "keywords": [
+              "connection.cursor()",
+              "execute()",
+              "fetchall()",
+              "raw()"
+            ]
+          }
+        },
+        "web_integrations": {
+          "django_views": {
+            "patterns": ["**/*.py"],
+            "keywords": [
+              "@login_required",
+              "@permission_required",
+              "HttpResponse",
+              "JsonResponse",
+              "render()"
+            ]
+          },
+          "django_rest": {
+            "patterns": ["**/*.py"],
+            "keywords": [
+              "@api_view",
+              "APIView",
+              "ModelViewSet",
+              "Serializer",
+              "Response"
+            ]
+          }
+        },
+        "external_integrations": {
+          "http_requests": {
+            "patterns": ["**/*.py"],
+            "keywords": [
+              "requests.get()",
+              "requests.post()",
+              "urllib",
+              "httplib"
+            ]
+          },
+          "celery": {
+            "patterns": ["**/*.py"],
+            "keywords": ["@shared_task", "delay()", "apply_async()", "Celery"]
+          }
+        }
+      }
+    },
+    "node_express": {
+      "name": "Node.js Express",
+      "description": "Node.js applications using Express framework",
+      "file_patterns": {
+        "source_code": {
+          "description": "JavaScript/TypeScript source code files",
+          "patterns": ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx"],
+          "directories": [
+            "**/src",
+            "**/app",
+            "**/lib",
+            "**/routes",
+            "**/controllers"
+          ],
+          "analysis_type": "program_analysis"
+        },
+        "configuration": {
+          "description": "Configuration files",
+          "patterns": [
+            "**/package.json",
+            "**/package-lock.json",
+            "**/tsconfig.json",
+            "**/.env*"
+          ],
+          "directories": ["**/"],
+          "analysis_type": "configuration_analysis"
+        },
+        "tests": {
+          "description": "Test files",
+          "patterns": [
+            "**/*.test.js",
+            "**/*.spec.js",
+            "**/*.test.ts",
+            "**/*.spec.ts"
+          ],
+          "directories": ["**/test", "**/tests", "**/__tests__"],
+          "analysis_type": "test_analysis"
+        },
+        "static_files": {
+          "description": "Static files",
+          "patterns": ["**/*.html", "**/*.css", "**/*.scss", "**/*.less"],
+          "directories": ["**/public", "**/static", "**/views"],
+          "analysis_type": "static_analysis"
+        }
+      },
+      "regex_patterns": {
+        "javascript_patterns": {
+          "function_definition": "(function\\s+([a-zA-Z0-9_]+)|const\\s+([a-zA-Z0-9_]+)\\s*=\\s*\\(|let\\s+([a-zA-Z0-9_]+)\\s*=\\s*\\(|var\\s+([a-zA-Z0-9_]+)\\s*=\\s*\\()",
+          "class_definition": "class\\s+([A-Za-z0-9_]+)",
+          "import_statement": "(import|require)\\s*\\(?['\"]([^'\"]+)['\"]\\)?",
+          "export_statement": "export\\s+(default\\s+)?(function|class|const|let|var)"
+        },
+        "express_patterns": {
+          "route_definition": "app\\.(get|post|put|delete|patch)\\s*\\(\\s*['\"]([^'\"]+)['\"]",
+          "middleware_definition": "app\\.use\\s*\\(\\s*['\"]([^'\"]+)['\"]",
+          "controller_method": "(get|post|put|delete|patch)\\s*\\(\\s*['\"]([^'\"]+)['\"]\\s*,\\s*([a-zA-Z0-9_]+)",
+          "express_app": "const\\s+app\\s*=\\s*express\\(\\)"
+        },
+        "database_patterns": {
+          "mongoose_model": "const\\s+([A-Za-z0-9_]+)\\s*=\\s*mongoose\\.model",
+          "sequelize_model": "class\\s+([A-Za-z0-9_]+)\\s+extends\\s+Model",
+          "database_query": "\\.(find|findOne|create|update|delete|remove)\\s*\\(",
+          "connection_string": "(mongodb|postgresql|mysql)://[^\\s]+"
+        }
+      },
+      "integration_points": {
+        "database_integrations": {
+          "mongodb": {
+            "patterns": ["**/*.js", "**/*.ts"],
+            "keywords": [
+              "mongoose",
+              "MongoDB",
+              "find()",
+              "save()",
+              "updateOne()"
+            ]
+          },
+          "sql": {
+            "patterns": ["**/*.js", "**/*.ts"],
+            "keywords": [
+              "sequelize",
+              "knex",
+              "query()",
+              "execute()",
+              "SELECT",
+              "INSERT"
+            ]
+          }
+        },
+        "web_integrations": {
+          "rest_api": {
+            "patterns": ["**/*.js", "**/*.ts"],
+            "keywords": [
+              "express.Router()",
+              "res.json()",
+              "res.send()",
+              "req.body",
+              "req.params"
+            ]
+          },
+          "websocket": {
+            "patterns": ["**/*.js", "**/*.ts"],
+            "keywords": [
+              "socket.io",
+              "WebSocket",
+              "ws",
+              "on('connection')",
+              "emit()"
+            ]
+          }
+        },
+        "external_integrations": {
+          "http_requests": {
+            "patterns": ["**/*.js", "**/*.ts"],
+            "keywords": [
+              "axios",
+              "fetch()",
+              "request()",
+              "http.get()",
+              "https.get()"
+            ]
+          },
+          "message_queue": {
+            "patterns": ["**/*.js", "**/*.ts"],
+            "keywords": [
+              "redis",
+              "bull",
+              "agenda",
+              "node-cron",
+              "setInterval()"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "auto_detection": {
+    "enabled": true,
+    "confidence_threshold": 0.7,
+    "detection_methods": {
+      "file_extensions": {
+        "weight": 0.3,
+        "patterns": {
+          "java": [".java", ".jar", ".war"],
+          "python": [".py", ".pyc", ".pyo"],
+          "javascript": [".js", ".ts", ".jsx", ".tsx"],
+          "mainframe": [".cbl", ".jcl", ".bms", ".cpy", ".csd"]
+        }
+      },
+      "configuration_files": {
+        "weight": 0.4,
+        "patterns": {
+          "java_spring": [
+            "pom.xml",
+            "build.gradle",
+            "application.properties",
+            "application.yml"
+          ],
+          "python_django": [
+            "requirements.txt",
+            "manage.py",
+            "settings.py",
+            "urls.py"
+          ],
+          "node_express": [
+            "package.json",
+            "package-lock.json",
+            "app.js",
+            "server.js"
+          ],
+          "mainframe": ["*.jcl", "*.csd", "*.ddl"]
+        }
+      },
+      "directory_structure": {
+        "weight": 0.3,
+        "patterns": {
+          "java_spring": ["src/main/java", "src/main/resources", "target"],
+          "python_django": ["manage.py", "migrations", "templates", "static"],
+          "node_express": ["node_modules", "src", "routes", "controllers"],
+          "mainframe": ["cbl", "jcl", "bms", "cpy", "csd"]
+        }
+      }
+    }
+  },
+  "fallback_config": {
+    "generic_patterns": {
+      "source_code": {
+        "description": "Generic source code files",
+        "patterns": [
+          "**/*.java",
+          "**/*.py",
+          "**/*.js",
+          "**/*.ts",
+          "**/*.go",
+          "**/*.rb",
+          "**/*.php"
+        ],
+        "directories": ["**/src", "**/app", "**/lib", "**/main"],
+        "analysis_type": "generic_analysis"
+      },
+      "configuration": {
+        "description": "Configuration files",
+        "patterns": [
+          "**/*.json",
+          "**/*.yaml",
+          "**/*.yml",
+          "**/*.xml",
+          "**/*.properties",
+          "**/*.env*"
+        ],
+        "directories": ["**/config", "**/conf", "**/"],
+        "analysis_type": "configuration_analysis"
+      },
+      "documentation": {
+        "description": "Documentation files",
+        "patterns": ["**/*.md", "**/*.txt", "**/*.rst", "**/*.adoc"],
+        "directories": ["**/docs", "**/documentation", "**/"],
+        "analysis_type": "documentation_analysis"
+      }
+    },
+    "generic_regex": {
+      "function_definition": "(function\\s+([a-zA-Z0-9_]+)|def\\s+([a-zA-Z0-9_]+)|public\\s+[^)]+\\)|private\\s+[^)]+\\))",
+      "class_definition": "(class\\s+([A-Za-z0-9_]+)|public\\s+class\\s+([A-Za-z0-9_]+))",
+      "import_statement": "(import\\s+[^;]+|from\\s+[^\\s]+\\s+import|require\\s*\\(['\"][^'\"]+['\"]\\))",
+      "configuration_key": "([A-Za-z0-9_.]+)\\s*[:=]\\s*([^\\s]+)"
+    }
+  }
+}
