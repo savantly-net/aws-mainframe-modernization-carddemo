@@ -9,7 +9,7 @@ echo ========================================
 echo.
 
 REM Check if we're in the right directory
-if not exist "run_all_validators.py" (
+if not exist "src\run_all_validators.py" (
     echo ERROR: run_all_validators.py not found!
     echo Please run this script from the validator-python directory.
     echo.
@@ -63,7 +63,11 @@ REM Run all validators
 echo Starting validation process...
 echo.
 
+REM Change to src directory and run the script
+cd src
 python run_all_validators.py
+cd ..
+
 
 REM Check if validation was successful
 if errorlevel 1 (

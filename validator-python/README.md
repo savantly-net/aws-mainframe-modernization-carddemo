@@ -11,7 +11,8 @@ validator-python/
 │   ├── deepeval_validator.py
 │   ├── compare_validators.py
 │   ├── generate_reports.py
-│   └── generate_deepeval_reports.py
+│   ├── generate_deepeval_reports.py
+│   └── run_all_validators.py
 ├── docs/                   # Documentation
 │   ├── CardDemo_Requirements_Validation_Report.md
 │   ├── DeepEval_Migration_Summary.md
@@ -94,7 +95,7 @@ cd validator-python
 chmod +x *.sh          # Make scripts executable (first time)
 ./setup_env.sh         # One-time setup
 source start_env.sh    # Activate environment
-python run_all_validators.py  # Run validators
+cd src && python run_all_validators.py  # Run validators
 deactivate             # Deactivate when done
 ```
 
