@@ -1,0 +1,163 @@
+{
+  "llm_providers": {
+    "openai": {
+      "name": "OpenAI",
+      "description": "OpenAI GPT models for G-Eval validation",
+      "models": {
+        "gpt-4": {
+          "name": "GPT-4",
+          "description": "Most capable GPT model for complex reasoning",
+          "max_tokens": 8192,
+          "temperature": 0.1,
+          "recommended_for": [
+            "complex_validation",
+            "chain_of_thoughts",
+            "detailed_analysis"
+          ]
+        },
+        "gpt-4-turbo": {
+          "name": "GPT-4 Turbo",
+          "description": "Faster and more cost-effective GPT-4 variant",
+          "max_tokens": 4096,
+          "temperature": 0.1,
+          "recommended_for": ["standard_validation", "quick_analysis"]
+        },
+        "gpt-3.5-turbo": {
+          "name": "GPT-3.5 Turbo",
+          "description": "Fast and cost-effective for basic validation",
+          "max_tokens": 4096,
+          "temperature": 0.1,
+          "recommended_for": ["basic_validation", "simple_analysis"]
+        }
+      },
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1"
+    },
+    "azure_openai": {
+      "name": "Azure OpenAI",
+      "description": "Azure-hosted OpenAI models",
+      "models": {
+        "gpt-4": {
+          "name": "GPT-4 (Azure)",
+          "description": "Azure-hosted GPT-4 model",
+          "max_tokens": 8192,
+          "temperature": 0.1,
+          "recommended_for": ["complex_validation", "enterprise_use"]
+        },
+        "gpt-35-turbo": {
+          "name": "GPT-3.5 Turbo (Azure)",
+          "description": "Azure-hosted GPT-3.5 Turbo model",
+          "max_tokens": 4096,
+          "temperature": 0.1,
+          "recommended_for": ["standard_validation", "enterprise_use"]
+        }
+      },
+      "api_key_env": "AZURE_OPENAI_API_KEY",
+      "endpoint_env": "AZURE_OPENAI_ENDPOINT",
+      "deployment_env": "AZURE_OPENAI_DEPLOYMENT"
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "description": "Anthropic Claude models",
+      "models": {
+        "claude-3-opus": {
+          "name": "Claude 3 Opus",
+          "description": "Most capable Claude model for complex reasoning",
+          "max_tokens": 4096,
+          "temperature": 0.1,
+          "recommended_for": ["complex_validation", "detailed_analysis"]
+        },
+        "claude-3-sonnet": {
+          "name": "Claude 3 Sonnet",
+          "description": "Balanced Claude model for general validation",
+          "max_tokens": 4096,
+          "temperature": 0.1,
+          "recommended_for": ["standard_validation", "general_analysis"]
+        },
+        "claude-3-haiku": {
+          "name": "Claude 3 Haiku",
+          "description": "Fast Claude model for quick validation",
+          "max_tokens": 4096,
+          "temperature": 0.1,
+          "recommended_for": ["quick_validation", "basic_analysis"]
+        }
+      },
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "base_url": "https://api.anthropic.com"
+    },
+    "google": {
+      "name": "Google",
+      "description": "Google Gemini models",
+      "models": {
+        "gemini-pro": {
+          "name": "Gemini Pro",
+          "description": "Google's most capable Gemini model",
+          "max_tokens": 8192,
+          "temperature": 0.1,
+          "recommended_for": ["complex_validation", "detailed_analysis"]
+        },
+        "gemini-pro-vision": {
+          "name": "Gemini Pro Vision",
+          "description": "Gemini model with vision capabilities",
+          "max_tokens": 8192,
+          "temperature": 0.1,
+          "recommended_for": ["visual_validation", "diagram_analysis"]
+        }
+      },
+      "api_key_env": "GOOGLE_API_KEY",
+      "base_url": "https://generativelanguage.googleapis.com"
+    }
+  },
+  "default_config": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "temperature": 0.1,
+    "max_tokens": 4096,
+    "timeout": 60,
+    "retry_attempts": 3,
+    "retry_delay": 1
+  },
+  "validation_prompts": {
+    "chain_of_thoughts": {
+      "enabled": true,
+      "description": "Use chain-of-thoughts reasoning for validation",
+      "prompt_template": "Please provide your evaluation with step-by-step reasoning:"
+    },
+    "detailed_feedback": {
+      "enabled": true,
+      "description": "Provide detailed feedback for each criterion",
+      "prompt_template": "Provide specific feedback for each criterion:"
+    },
+    "scoring": {
+      "enabled": true,
+      "description": "Include numerical scoring in validation results",
+      "prompt_template": "Give an overall assessment score (0-100):"
+    },
+    "improvements": {
+      "enabled": true,
+      "description": "Suggest improvements for requirements",
+      "prompt_template": "Suggest improvements if needed:"
+    }
+  },
+  "output_formats": {
+    "json": {
+      "enabled": true,
+      "description": "Output results in JSON format",
+      "template": {
+        "score": "float",
+        "confidence": "float",
+        "feedback": "dict",
+        "improvements": "list"
+      }
+    },
+    "markdown": {
+      "enabled": true,
+      "description": "Output results in Markdown format",
+      "template": "## Validation Results\n\n### Score: {score}\n### Confidence: {confidence}\n\n### Feedback\n{feedback}\n\n### Improvements\n{improvements}"
+    },
+    "text": {
+      "enabled": true,
+      "description": "Output results in plain text format"
+    }
+  }
+}

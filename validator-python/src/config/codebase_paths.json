@@ -1,0 +1,151 @@
+{
+  "codebase_root": "../..",
+  "file_patterns": {
+    "cobol_programs": {
+      "description": "COBOL source code files",
+      "patterns": ["**/*.cbl", "**/*.CBL", "**/*.cob", "**/*.COB"],
+      "directories": ["app/**/cbl", "cbl"],
+      "analysis_type": "program_analysis"
+    },
+    "jcl_jobs": {
+      "description": "JCL job files",
+      "patterns": ["**/*.jcl", "**/*.JCL"],
+      "directories": ["app/**/jcl", "jcl"],
+      "analysis_type": "job_analysis"
+    },
+    "database_schemas": {
+      "description": "Database schema and DDL files",
+      "patterns": ["**/*.ddl", "**/*.DDL", "**/*.dbd", "**/*.DBD"],
+      "directories": ["app/**/ddl", "app/**/ims", "ddl"],
+      "analysis_type": "schema_analysis"
+    },
+    "screen_maps": {
+      "description": "BMS screen map files",
+      "patterns": ["**/*.bms", "**/*.BMS"],
+      "directories": ["app/**/bms", "bms"],
+      "analysis_type": "screen_analysis"
+    },
+    "copybooks": {
+      "description": "COBOL copybook files",
+      "patterns": ["**/*.cpy", "**/*.CPY"],
+      "directories": ["app/**/cpy", "cpy"],
+      "analysis_type": "data_structure_analysis"
+    },
+    "cics_definitions": {
+      "description": "CICS CSD files",
+      "patterns": ["**/*.csd", "**/*.CSD"],
+      "directories": ["app/**/csd", "csd"],
+      "analysis_type": "cics_analysis"
+    },
+    "data_files": {
+      "description": "Data and initialization files",
+      "patterns": ["**/*.dat", "**/*.DAT", "**/*.INIT"],
+      "directories": ["app/**/data", "data"],
+      "analysis_type": "data_analysis"
+    }
+  },
+  "analysis_config": {
+    "program_analysis": {
+      "extract_program_names": true,
+      "extract_transaction_ids": true,
+      "extract_file_references": true,
+      "extract_database_references": true,
+      "extract_mq_references": true,
+      "extract_cics_commands": true
+    },
+    "job_analysis": {
+      "extract_job_names": true,
+      "extract_program_calls": true,
+      "extract_dataset_references": true,
+      "extract_parameters": true
+    },
+    "schema_analysis": {
+      "extract_table_names": true,
+      "extract_column_definitions": true,
+      "extract_relationships": true,
+      "extract_constraints": true
+    },
+    "screen_analysis": {
+      "extract_screen_names": true,
+      "extract_field_definitions": true,
+      "extract_validation_rules": true
+    },
+    "data_structure_analysis": {
+      "extract_record_layouts": true,
+      "extract_field_definitions": true,
+      "extract_data_types": true
+    },
+    "cics_analysis": {
+      "extract_transaction_definitions": true,
+      "extract_program_definitions": true,
+      "extract_file_definitions": true
+    },
+    "data_analysis": {
+      "extract_data_structures": true,
+      "extract_sample_data": true,
+      "extract_data_formats": true
+    }
+  },
+  "technology_patterns": {
+    "cobol_patterns": {
+      "program_name": r"PROGRAM-ID\s+([A-Z0-9]{1,8})",
+      "transaction_id": r"EXEC\s+CICS\s+[A-Z]+\s+TRANSID\s+([A-Z0-9]{4})",
+      "file_reference": r"SELECT\s+([A-Z0-9-]+)\s+ASSIGN\s+TO\s+([A-Z0-9-]+)",
+      "database_reference": r"EXEC\s+SQL\s+(SELECT|INSERT|UPDATE|DELETE)",
+      "mq_reference": r"EXEC\s+CICS\s+(GET|PUT)\s+QUEUE"
+    },
+    "jcl_patterns": {
+      "job_name": r"//\s*([A-Z0-9@#$]{1,8})\s+JOB",
+      "program_call": r"//\s+STEP\s+\d+\s+EXEC\s+PGM=([A-Z0-9]{1,8})",
+      "dataset_reference": r"//\s+([A-Z0-9-]+)\s+DD\s+DSN=([A-Z0-9.@#$]+)"
+    },
+    "database_patterns": {
+      "table_name": r"CREATE\s+TABLE\s+([A-Z0-9_]+)",
+      "column_definition": r"([A-Z0-9_]+)\s+(CHAR|VARCHAR|INTEGER|DECIMAL)",
+      "foreign_key": r"FOREIGN\s+KEY\s*\(([A-Z0-9_,\s]+)\)\s+REFERENCES"
+    },
+    "cics_patterns": {
+      "transaction_definition": r"DEFINE\s+TRANSACTION\s+([A-Z0-9]{4})",
+      "program_definition": r"DEFINE\s+PROGRAM\s+([A-Z0-9]{1,8})",
+      "file_definition": r"DEFINE\s+FILE\s+([A-Z0-9-]+)"
+    }
+  },
+  "integration_points": {
+    "database_integrations": {
+      "db2": {
+        "patterns": ["**/ddl/**/*.ddl", "**/ddl/**/*.DDL"],
+        "keywords": ["DB2", "SQL", "CREATE TABLE", "INSERT", "SELECT", "UPDATE", "DELETE"]
+      },
+      "ims": {
+        "patterns": ["**/ims/**/*.dbd", "**/ims/**/*.DBD"],
+        "keywords": ["IMS", "DBD", "SEGM", "FIELD", "DBDGEN"]
+      },
+      "vsam": {
+        "patterns": ["**/*.cbl", "**/*.CBL"],
+        "keywords": ["VSAM", "KSDS", "ESDS", "RRDS", "SELECT", "ASSIGN"]
+      }
+    },
+    "messaging_integrations": {
+      "mq": {
+        "patterns": ["**/*.cbl", "**/*.CBL"],
+        "keywords": ["MQ", "GET", "PUT", "QUEUE", "EXEC CICS"]
+      }
+    },
+    "transaction_integrations": {
+      "cics": {
+        "patterns": ["**/*.cbl", "**/*.CBL", "**/*.csd", "**/*.CSD"],
+        "keywords": ["CICS", "EXEC CICS", "TRANSID", "COMMAREA"]
+      }
+    }
+  },
+  "output_directories": {
+    "analysis_results": "data/analysis_results",
+    "validation_results": "data/validation_results",
+    "reports": "reports",
+    "logs": "logs"
+  },
+  "file_extensions": {
+    "supported_formats": [".cbl", ".CBL", ".cob", ".COB", ".jcl", ".JCL", ".ddl", ".DDL", ".dbd", ".DBD", ".bms", ".BMS", ".cpy", ".CPY", ".csd", ".CSD", ".dat", ".DAT"],
+    "text_formats": [".txt", ".md", ".json", ".xml", ".csv"]
+  }
+}

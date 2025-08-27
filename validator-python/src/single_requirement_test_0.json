@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "extraction_date": "C:\\Users\\wphil\\development\\savantly\\aws-mainframe-modernization-carddemo\\validator-python\\src",
+    "requirement_index": 0,
+    "total_requirements": 402,
+    "source_file": "../data/CD-Requirements.json"
+  },
+  "requirement": {
+    "user_story": {
+      "title": "As a user, I want to submit credit card authorization requests, so that transactions can be processed in real-time.",
+      "reference": null,
+      "description": "As a user, I want to submit credit card authorization requests, so that transactions can be processed in real-time.",
+      "feature_name": "Credit Card Authorizations",
+      "business_rules": [
+        "The credit card number must be 16 digits and numeric.",
+        "The transaction amount must be a positive decimal value.",
+        "Authorization requests must include a valid card expiry date in MMYY format.",
+        "Fraud detection rules must be applied to all authorization requests.",
+        "Authorization requests must be processed in real-time using MQ.",
+        "All approved transactions must be stored in the IMS database.",
+        "All declined transactions must include a reason code.",
+        "The system must ensure two-phase commit transactions across IMS DB and DB2.",
+        "Authorization requests must be logged for audit purposes."
+      ],
+      "technical_requirements": {
+        "reference": [
+          {
+            "file_name": "README.md",
+            "file_path": "/tmp/tmp93y86zf3/aws-mainframe-modernization-carddemo/app/app-authorization-ims-db2-mq/README.md",
+            "line_number": 1,
+            "reference_text": "The Credit Card Authorizations extension enhances CardDemo with a comprehensive authorization processing system that integrates IMS DB, DB2, and MQ technologies."
+          },
+          {
+            "file_name": "AUTHFRDS.ddl",
+            "file_path": "/tmp/tmp93y86zf3/aws-mainframe-modernization-carddemo/app/app-authorization-ims-db2-mq/ddl/AUTHFRDS.ddl",
+            "line_number": 1,
+            "reference_text": "CREATE TABLE CARDDEMO.AUTHFRDS (CARD_NUM CHAR(16) NOT NULL, AUTH_TS TIMESTAMP NOT NULL, ...);"
+          },
+          {
+            "file_name": "COPAUS2C.cbl",
+            "file_path": "/tmp/tmp93y86zf3/aws-mainframe-modernization-carddemo/app/app-authorization-ims-db2-mq/cbl/COPAUS2C.cbl",
+            "line_number": 1,
+            "reference_text": "INSERT INTO CARDDEMO.AUTHFRDS (CARD_NUM, AUTH_TS, AUTH_TYPE, ...);"
+          },
+          {
+            "file_name": "CIPAUDTY.cpy",
+            "file_path": "/tmp/tmp93y86zf3/aws-mainframe-modernization-carddemo/app/app-authorization-ims-db2-mq/cpy/CIPAUDTY.cpy",
+            "line_number": 1,
+            "reference_text": "IMS SEGMENT - PENDING AUTHORIZATION DETAILS"
+          }
+        ],
+        "requirement": "1. **Architecture Considerations**: The system must integrate IMS DB, DB2, and MQ for real-time processing of credit card authorization requests. It should ensure transactional consistency using two-phase commit transactions across IMS DB and DB2.\n\n2. **Involved Modules/Classes**: \n   - COPAUA0C: Handles authorization request processing triggered by MQ messages.\n   - COPAUS0C: Displays authorization summary.\n   - COPAUS1C: Displays authorization details.\n   - COPAUS2C: Marks transactions as fraudulent and updates DB2.\n   - CBPAUP0C: Purges expired authorizations.\n\n3. **Relevant Interfaces or Methods**: \n   - MQ queues for request and response: AWS.M2.CARDDEMO.PAUTH.REQUEST and AWS.M2.CARDDEMO.PAUTH.REPLY.\n   - COBOL BMS screens for user interaction: Authorization Request Screen.\n   - CICS transactions: CP00, CPVS, CPVD.\n\n4. **Database Schema Changes**: \n   - AUTHFRDS table in DB2 to store authorization and fraud-related data.\n   - PA_AUTHORIZATION_DETAILS segment in IMS DB for hierarchical storage of authorization details.\n\n5. **Validations**: \n   - Validate credit card number format and length.\n   - Ensure transaction amount is within permissible limits.\n   - Check for expired cards and invalid authorization types.\n   - Detect potential fraud using predefined rules.\n\n6. **Integration Points**: \n   - MQ for asynchronous communication.\n   - IMS DB for hierarchical data storage.\n   - DB2 for relational data storage and fraud analytics.\n\n7. **Error Handling**: \n   - Return error messages for invalid credit card numbers.\n   - Provide reasons for declined transactions.\n   - Flag transactions for review in case of suspected fraud.\n\n8. **Audit Logging**: \n   - Log all transactions in DB2 for audit purposes.\n\n9. **Transactional Consistency**: \n   - Ensure two-phase commit transactions across IMS DB and DB2.\n\n10. **User Interface**: \n    - Provide screens for submitting authorization requests and viewing authorization details.",
+        "uml_diagram": "```mermaid\nclassDiagram\n    class AuthorizationRequest {\n        +String cardNumber\n        +Decimal transactionAmount\n        +String authorizationType\n        +String expiryDate\n        +String messageType\n        +String messageSource\n        +String processingCode\n        +String merchantDetails\n        +submitRequest()\n    }\n\n    class FraudDetection {\n        +detectFraud(AuthorizationRequest request)\n        +flagTransaction()\n    }\n\n    class DatabaseHandler {\n        +storeTransaction(AuthorizationRequest request)\n        +logTransaction()\n    }\n\n    class MQHandler {\n        +sendRequest(AuthorizationRequest request)\n        +receiveResponse()\n    }\n\n    AuthorizationRequest --> FraudDetection : \"Validates and flags fraud\"\n    AuthorizationRequest --> DatabaseHandler : \"Stores transaction details\"\n    AuthorizationRequest --> MQHandler : \"Sends and receives MQ messages\"\n```",
+        "sequence_diagram": "```mermaid\nsequenceDiagram\n    participant User\n    participant AuthorizationScreen\n    participant MQHandler\n    participant FraudDetection\n    participant DatabaseHandler\n\n    User -> AuthorizationScreen: Submit Authorization Request\n    AuthorizationScreen -> MQHandler: Send Request to MQ\n    MQHandler -->> FraudDetection: Validate Request\n    FraudDetection -> MQHandler: Flag Fraud (if detected)\n    MQHandler -> DatabaseHandler: Store Transaction Details\n    DatabaseHandler -> MQHandler: Log Transaction\n    MQHandler -> AuthorizationScreen: Send Response\n    AuthorizationScreen -> User: Display Response\n```"
+      }
+    },
+    "technical_requirements": [
+      "1. **Architecture Considerations**: The system must integrate IMS DB, DB2, and MQ for real-time processing of credit card authorization requests. It should ensure transactional consistency using two-phase commit transactions across IMS DB and DB2.\n\n2. **Involved Modules/Classes**: \n   - COPAUA0C: Handles authorization request processing triggered by MQ messages.\n   - COPAUS0C: Displays authorization summary.\n   - COPAUS1C: Displays authorization details.\n   - COPAUS2C: Marks transactions as fraudulent and updates DB2.\n   - CBPAUP0C: Purges expired authorizations.\n\n3. **Relevant Interfaces or Methods**: \n   - MQ queues for request and response: AWS.M2.CARDDEMO.PAUTH.REQUEST and AWS.M2.CARDDEMO.PAUTH.REPLY.\n   - COBOL BMS screens for user interaction: Authorization Request Screen.\n   - CICS transactions: CP00, CPVS, CPVD.\n\n4. **Database Schema Changes**: \n   - AUTHFRDS table in DB2 to store authorization and fraud-related data.\n   - PA_AUTHORIZATION_DETAILS segment in IMS DB for hierarchical storage of authorization details.\n\n5. **Validations**: \n   - Validate credit card number format and length.\n   - Ensure transaction amount is within permissible limits.\n   - Check for expired cards and invalid authorization types.\n   - Detect potential fraud using predefined rules.\n\n6. **Integration Points**: \n   - MQ for asynchronous communication.\n   - IMS DB for hierarchical data storage.\n   - DB2 for relational data storage and fraud analytics.\n\n7. **Error Handling**: \n   - Return error messages for invalid credit card numbers.\n   - Provide reasons for declined transactions.\n   - Flag transactions for review in case of suspected fraud.\n\n8. **Audit Logging**: \n   - Log all transactions in DB2 for audit purposes.\n\n9. **Transactional Consistency**: \n   - Ensure two-phase commit transactions across IMS DB and DB2.\n\n10. **User Interface**: \n    - Provide screens for submitting authorization requests and viewing authorization details."
+    ]
+  }
+}

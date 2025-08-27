@@ -1,0 +1,263 @@
+{
+  "business_rules": {
+    "name": "Business Rules Validation",
+    "description": "Evaluate business rules for clarity, completeness, and testability",
+    "criteria": {
+      "clarity": {
+        "weight": 0.25,
+        "description": "The business rule is clear and unambiguous",
+        "evaluation_points": [
+          "Rule uses clear, precise language",
+          "No ambiguous terms or conditions",
+          "Rule is self-contained and complete"
+        ]
+      },
+      "completeness": {
+        "weight": 0.25,
+        "description": "The business rule covers all necessary scenarios",
+        "evaluation_points": [
+          "Rule addresses all relevant cases",
+          "Edge cases are considered",
+          "Rule is comprehensive for its scope"
+        ]
+      },
+      "testability": {
+        "weight": 0.25,
+        "description": "The business rule can be tested and validated",
+        "evaluation_points": [
+          "Rule has measurable outcomes",
+          "Test scenarios can be defined",
+          "Success/failure criteria are clear"
+        ]
+      },
+      "consistency": {
+        "weight": 0.25,
+        "description": "The business rule is consistent with other rules",
+        "evaluation_points": [
+          "Rule doesn't conflict with other rules",
+          "Terminology is consistent",
+          "Rule follows established patterns"
+        ]
+      }
+    }
+  },
+  "technical_requirements": {
+    "name": "Technical Requirements Validation",
+    "description": "Evaluate technical requirements for feasibility, specificity, and implementation clarity",
+    "criteria": {
+      "feasibility": {
+        "weight": 0.2,
+        "description": "The technical requirement is feasible to implement",
+        "evaluation_points": [
+          "Requirement uses existing or available technology",
+          "Implementation approach is realistic",
+          "Resource requirements are reasonable"
+        ]
+      },
+      "specificity": {
+        "weight": 0.25,
+        "description": "The technical requirement is specific and detailed",
+        "evaluation_points": [
+          "Requirement provides clear technical details",
+          "Specific technologies or methods are mentioned",
+          "Implementation parameters are defined"
+        ]
+      },
+      "completeness": {
+        "weight": 0.2,
+        "description": "The technical requirement is complete and comprehensive",
+        "evaluation_points": [
+          "All necessary technical aspects are covered",
+          "Integration points are identified",
+          "Dependencies are clearly stated"
+        ]
+      },
+      "maintainability": {
+        "weight": 0.15,
+        "description": "The technical requirement supports maintainable implementation",
+        "evaluation_points": [
+          "Requirement follows best practices",
+          "Implementation will be maintainable",
+          "Documentation requirements are clear"
+        ]
+      },
+      "performance": {
+        "weight": 0.2,
+        "description": "The technical requirement considers performance implications",
+        "evaluation_points": [
+          "Performance requirements are specified",
+          "Scalability considerations are included",
+          "Resource usage is reasonable"
+        ]
+      }
+    }
+  },
+  "architecture_components": {
+    "name": "Architecture Components Validation",
+    "description": "Evaluate architecture components for appropriateness and integration",
+    "criteria": {
+      "appropriateness": {
+        "weight": 0.3,
+        "description": "The architecture component is appropriate for the requirement",
+        "evaluation_points": [
+          "Component matches the technical need",
+          "Technology choice is suitable",
+          "Component fits the overall architecture"
+        ]
+      },
+      "integration": {
+        "weight": 0.25,
+        "description": "The architecture component integrates well with existing systems",
+        "evaluation_points": [
+          "Integration points are clearly defined",
+          "Compatibility with existing components",
+          "Data flow is well-defined"
+        ]
+      },
+      "scalability": {
+        "weight": 0.2,
+        "description": "The architecture component supports scalability",
+        "evaluation_points": [
+          "Component can handle growth",
+          "Performance under load is considered",
+          "Resource scaling is addressed"
+        ]
+      },
+      "security": {
+        "weight": 0.25,
+        "description": "The architecture component includes security considerations",
+        "evaluation_points": [
+          "Security requirements are identified",
+          "Access controls are specified",
+          "Data protection is addressed"
+        ]
+      }
+    }
+  },
+  "integration_points": {
+    "name": "Integration Points Validation",
+    "description": "Evaluate integration points for clarity, feasibility, and completeness",
+    "criteria": {
+      "clarity": {
+        "weight": 0.25,
+        "description": "The integration point is clearly defined",
+        "evaluation_points": [
+          "Integration purpose is clear",
+          "Data flow is well-defined",
+          "Interface specifications are detailed"
+        ]
+      },
+      "feasibility": {
+        "weight": 0.25,
+        "description": "The integration point is feasible to implement",
+        "evaluation_points": [
+          "Integration approach is realistic",
+          "Technology compatibility is confirmed",
+          "Implementation complexity is reasonable"
+        ]
+      },
+      "completeness": {
+        "weight": 0.25,
+        "description": "The integration point specification is complete",
+        "evaluation_points": [
+          "All necessary details are provided",
+          "Error handling is specified",
+          "Monitoring requirements are defined"
+        ]
+      },
+      "reliability": {
+        "weight": 0.25,
+        "description": "The integration point supports reliable operation",
+        "evaluation_points": [
+          "Failure scenarios are addressed",
+          "Recovery mechanisms are specified",
+          "Availability requirements are defined"
+        ]
+      }
+    }
+  },
+  "data_entities": {
+    "name": "Data Entities Validation",
+    "description": "Evaluate data entities for completeness, consistency, and usability",
+    "criteria": {
+      "completeness": {
+        "weight": 0.3,
+        "description": "The data entity definition is complete",
+        "evaluation_points": [
+          "All necessary fields are defined",
+          "Data types are specified",
+          "Constraints are clearly stated"
+        ]
+      },
+      "consistency": {
+        "weight": 0.25,
+        "description": "The data entity is consistent with existing data models",
+        "evaluation_points": [
+          "Naming conventions are followed",
+          "Data types are consistent",
+          "Relationships are properly defined"
+        ]
+      },
+      "usability": {
+        "weight": 0.25,
+        "description": "The data entity supports the intended use cases",
+        "evaluation_points": [
+          "Entity supports required operations",
+          "Performance requirements are met",
+          "Access patterns are efficient"
+        ]
+      },
+      "maintainability": {
+        "weight": 0.2,
+        "description": "The data entity supports maintainable data management",
+        "evaluation_points": [
+          "Entity design follows best practices",
+          "Documentation requirements are clear",
+          "Change management is considered"
+        ]
+      }
+    }
+  },
+  "validation_rules": {
+    "name": "Validation Rules Validation",
+    "description": "Evaluate validation rules for completeness, accuracy, and testability",
+    "criteria": {
+      "completeness": {
+        "weight": 0.25,
+        "description": "The validation rule covers all necessary validation scenarios",
+        "evaluation_points": [
+          "All validation cases are covered",
+          "Edge cases are addressed",
+          "Error conditions are specified"
+        ]
+      },
+      "accuracy": {
+        "weight": 0.3,
+        "description": "The validation rule accurately validates the intended criteria",
+        "evaluation_points": [
+          "Validation logic is correct",
+          "Business rules are properly enforced",
+          "False positives/negatives are minimized"
+        ]
+      },
+      "testability": {
+        "weight": 0.25,
+        "description": "The validation rule can be effectively tested",
+        "evaluation_points": [
+          "Test cases can be clearly defined",
+          "Validation outcomes are measurable",
+          "Test data requirements are clear"
+        ]
+      },
+      "performance": {
+        "weight": 0.2,
+        "description": "The validation rule performs efficiently",
+        "evaluation_points": [
+          "Validation execution is efficient",
+          "Resource usage is reasonable",
+          "Response time is acceptable"
+        ]
+      }
+    }
+  }
+}
