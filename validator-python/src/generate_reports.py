@@ -23,6 +23,7 @@ Date: 2025
 
 import os      # For file system operations and path handling
 import sys     # For system-specific parameters and exit codes
+
 from deepeval_validator import CardDemoDeepEvalValidator  # Main validator class
 
 def main():
@@ -67,6 +68,7 @@ def main():
         # VALIDATOR INITIALIZATION - Set up the requirements validator
         # =============================================================================
         print("🔍 Initializing validator...")
+
         validator = CardDemoDeepEvalValidator(
             requirements_file='../data/CD-Requirements.json',  # AI-generated requirements
             codebase_path='../..'  # CardDemo root directory
@@ -104,6 +106,7 @@ def main():
         # Generate Markdown report (primary format with rich formatting)
         print("1. Generating Markdown report...")
         markdown_file = "../reports/CardDemo_Requirements_Validation_Report.md"
+
         validator.generate_deepeval_report(markdown_file)
         print(f"   ✅ Markdown report saved: {markdown_file}")
         

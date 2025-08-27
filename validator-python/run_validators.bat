@@ -68,6 +68,7 @@ cd src
 python run_all_validators.py
 cd ..
 
+
 REM Check if validation was successful
 if errorlevel 1 (
     echo.

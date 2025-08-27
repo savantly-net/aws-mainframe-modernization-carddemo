@@ -30,6 +30,7 @@ validator-python/
 ├── test/                   # Test scripts and results
 ├── carddemo-validator-env/ # Python virtual environment
 ├── requirements.txt        # Python dependencies
+├── run_all_validators.py   # Script to run all validators
 ├── setup_env.bat          # Windows: Setup virtual environment
 ├── start_env.bat          # Windows: Activate environment
 ├── stop_env.bat           # Windows: Deactivate environment
@@ -83,7 +84,7 @@ validator-python/
 cd validator-python
 setup_env.bat          # One-time setup
 start_env.bat          # Activate environment
-run_validators.bat     # Run all validators (changes to src/ first)
+python run_all_validators.py  # Run validators
 stop_env.bat           # Deactivate when done
 ```
 

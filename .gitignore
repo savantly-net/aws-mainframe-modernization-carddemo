@@ -13,6 +13,7 @@ env/
 .env/
 .env
 
+
 # Python cache files
 __pycache__/
 *.py[cod]
@@ -109,6 +110,7 @@ Thumbs.db
 *.tmp
 *.temp
 *.log
+
 
 # Reports directory
 reports/

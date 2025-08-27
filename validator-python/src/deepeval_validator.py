@@ -64,6 +64,7 @@ from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.models import GPTModel, AnthropicModel, GeminiModel, AzureOpenAIModel
 from deepeval.test_case import LLMTestCase
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -112,6 +113,7 @@ class CardDemoDeepEvalValidator:
     """
     
     def __init__(self, requirements_file: str, codebase_path: str, llm_model: str = "gpt-4o", enable_deepeval: bool = True):
+
         """
         Initialize the DeepEval validator.
         
@@ -120,10 +122,12 @@ class CardDemoDeepEvalValidator:
             codebase_path: Path to the CardDemo codebase root directory
             llm_model: LLM model to use for semantic validation
             enable_deepeval: Whether to enable DeepEval validation (False for basic validation only)
+
         """
         self.requirements_file = requirements_file
         self.codebase_path = Path(codebase_path)
         self.llm_model = llm_model
+
         self.enable_deepeval = enable_deepeval
         
         # Initialize data storage
@@ -149,6 +153,7 @@ class CardDemoDeepEvalValidator:
         Initialize the DeepEval model for semantic validation.
         """
         try:
+
             # Set SSL context to handle certificate issues
             import ssl
             import certifi
@@ -181,6 +186,7 @@ class CardDemoDeepEvalValidator:
                 logger.info(f"Initialized DeepEval with OpenAI model: {self.llm_model}")
         except Exception as e:
             logger.warning(f"Could not initialize OpenAI/Azure OpenAI model: {e}")
+
             try:
                 # Fallback to Anthropic
                 self.llm = AnthropicModel(model="claude-3-sonnet-20240229")
@@ -300,6 +306,7 @@ class CardDemoDeepEvalValidator:
         
         for i, req in enumerate(tech_reqs):
             req_id = f"TECH_REQ_{i+1:03d}"
+
             logger.info(f"Validating requirement {req_id}")
             try:
                 # Add a timeout for each individual validation
@@ -344,6 +351,7 @@ class CardDemoDeepEvalValidator:
         user_stories = self._extract_user_stories()
         for i, story in enumerate(user_stories):
             story_id = f"USER_STORY_{i+1:03d}"
+
             logger.info(f"Validating user story {story_id}")
             try:
                 # Add a timeout for each individual validation
@@ -390,6 +398,7 @@ class CardDemoDeepEvalValidator:
         """
         Validate a single requirement using DeepEval's semantic understanding.
         """
+
         # Check if DeepEval is enabled
         if not self.enable_deepeval:
             logger.info(f"DeepEval disabled, using basic validation for {req_id}")
@@ -495,6 +504,7 @@ class CardDemoDeepEvalValidator:
             
         except Exception as e:
             logger.error(f"Error in DeepEval validation for {req_id}: {e}")
+
             # Fallback to basic validation without DeepEval
             logger.info(f"Falling back to basic validation for {req_id}")
             return self._handle_validation_failure(req_id, requirement_text, e)
@@ -537,6 +547,7 @@ class CardDemoDeepEvalValidator:
         - Specific improvement recommendations
         """
     
+
     def _get_codebase_context(self) -> str:
         """
         Get the codebase context for DeepEval hallucination detection.
@@ -583,7 +594,7 @@ class CardDemoDeepEvalValidator:
                 "Consider increasing timeout values if validation is timing out"
             ]
         )
-    
+
     def _semantic_component_validation(self, requirement_text: str) -> Dict[str, Any]:
         """
         Perform semantic validation of components mentioned in the requirement.
@@ -787,6 +798,7 @@ class CardDemoDeepEvalValidator:
             
         except Exception as e:
             logger.error(f"Error in DeepEval user story validation for {story_id}: {e}")
+
             # Fallback to basic validation
             logger.info(f"Falling back to basic validation for user story {story_id}")
             return self._handle_validation_failure(story_id, story_text, e)
@@ -845,6 +857,7 @@ class CardDemoDeepEvalValidator:
         unidentified_features = self._identify_unidentified_features()
         
         # Generate improvement recommendations
+
         improvement_recommendations = self._generate_coverage_recommendations(
             coverage_percentage=coverage_percentage,
             hallucination_rate=hallucination_rate,
@@ -889,6 +902,7 @@ class CardDemoDeepEvalValidator:
                 unidentified.append(f"Transaction {transaction} not mentioned in requirements")
         return unidentified
     
+
     def _generate_coverage_recommendations(self, coverage_percentage: float = 0.0, hallucination_rate: float = 0.0, semantic_accuracy: float = 0.0) -> List[str]:
         """Generate recommendations for improving coverage."""
         recommendations = []
