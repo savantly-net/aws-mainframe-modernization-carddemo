@@ -12,13 +12,14 @@ This document tracks the location and file name changes for the review documents
 
 ## File Name Changes
 
-| Original File Name                     | New File Name                            | Purpose                                                        | Status   |
-| -------------------------------------- | ---------------------------------------- | -------------------------------------------------------------- | -------- |
-| `first_user_story_enhanced_report.md`  | `1-first_user_story_enhanced_report.md`  | Comprehensive analysis report of first user story              | ✅ Moved |
-| `user_stories_report.md`               | `2-user_stories_report.md`               | Concise user stories analysis with validation status           | ✅ Moved |
-| `technical_requirements_report.md`     | `3-technical_requirements_report.md`     | Concise technical requirements analysis with validation status | ✅ Moved |
-| `technical_implementation_approach.md` | `4-technical_implementation_approach.md` | Technical implementation planning for scaling                  | ✅ Moved |
-| `g_eval_review_approach.md`            | `5-g_eval_review_approach.md`            | G-Eval framework implementation approach                       | ✅ Moved |
+| Original File Name                     | New File Name                            | Purpose                                                            | Status     |
+| -------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ | ---------- |
+| `first_user_story_enhanced_report.md`  | `1-first_user_story_enhanced_report.md`  | Comprehensive analysis report of first user story                  | ✅ Moved   |
+| `user_stories_report.md`               | `2-user_stories_report.md`               | Concise user stories analysis with validation status               | ✅ Moved   |
+| `technical_requirements_report.md`     | `3-technical_requirements_report.md`     | Concise technical requirements analysis with validation status     | ✅ Moved   |
+| `technical_implementation_approach.md` | `4-technical_implementation_approach.md` | Technical implementation planning for scaling                      | ✅ Moved   |
+| `g_eval_review_approach.md`            | `5-g_eval_review_approach.md`            | G-Eval framework implementation approach                           | ✅ Moved   |
+| `missing_sections_analysis.md`         | `6-missing_sections_analysis.md`         | Analysis of missing specification sections in CD-Requirements.json | ✅ Created |
 
 ## Document Sequence and Purpose
 
@@ -52,6 +53,12 @@ This document tracks the location and file name changes for the review documents
 - **Content:** Evaluation criteria, codebase context, validation workflow
 - **Status:** ✅ Complete - Ready for G-Eval implementation
 
+### **6. `6-missing_sections_analysis.md`**
+
+- **Purpose:** Analysis of missing specification sections in CD-Requirements.json
+- **Content:** Detailed analysis of 6 additional specification sections beyond user stories
+- **Status:** ✅ Complete - Ready for comprehensive framework expansion
+
 ## Document Dependencies
 
 ### **Reading Order:**
@@ -59,13 +66,15 @@ This document tracks the location and file name changes for the review documents
 1. **Start with:** `1-first_user_story_enhanced_report.md` (comprehensive overview)
 2. **Then review:** `2-user_stories_report.md` and `3-technical_requirements_report.md` (focused analysis)
 3. **Then plan:** `4-technical_implementation_approach.md` (scaling strategy)
-4. **Finally implement:** `5-g_eval_review_approach.md` (validation framework)
+4. **Then implement:** `5-g_eval_review_approach.md` (validation framework)
+5. **Finally expand:** `6-missing_sections_analysis.md` (comprehensive framework expansion)
 
 ### **Document Relationships:**
 
 - **Documents 1-3:** Analysis and extraction results
 - **Document 4:** Implementation planning based on analysis
 - **Document 5:** Validation framework for the extracted data
+- **Document 6:** Comprehensive framework expansion for all specification sections
 
 ## File Structure
 
@@ -78,7 +87,8 @@ validator-python/
 │       ├── 2-user_stories_report.md
 │       ├── 3-technical_requirements_report.md
 │       ├── 4-technical_implementation_approach.md
-│       └── 5-g_eval_review_approach.md
+│       ├── 5-g_eval_review_approach.md
+│       └── 6-missing_sections_analysis.md
 └── src/
     ├── extract_first_user_story.py (extraction script)
     ├── first_user_story_enhanced.json (extracted data)
@@ -94,7 +104,7 @@ validator-python/
 
 ### **Naming Convention:**
 
-- **Added numbered prefixes:** `1-`, `2-`, `3-`, `4-`, `5-`
+- **Added numbered prefixes:** `1-`, `2-`, `3-`, `4-`, `5-`, `6-`
 - **Maintained descriptive names:** Clear purpose identification
 - **Sequential ordering:** Logical progression from analysis to implementation
 
@@ -109,7 +119,7 @@ validator-python/
 
 ### **For Review:**
 
-1. Review documents in numerical order (1-5)
+1. Review documents in numerical order (1-6)
 2. Use this index for navigation and understanding
 3. Reference specific documents as needed for implementation
 
